@@ -310,7 +310,7 @@ public class SpaceShooter extends Application {
         // Vẽ hình ảnh trái tim bên phải chữ "Lives:"
         if (heartImage != null) {
             for (int i = 0; i < numLives; i++) {
-                gc.drawImage(heartImage, WIDTH - 140 + i * 40, 10, 20, 20); // Dịch trái tim sang trái một chút
+                gc.drawImage(heartImage, WIDTH - 140 + i * 35, 10, 30, 30); // Dịch trái tim sang trái một chút
             }
         } else {
             // Nếu không tải được ảnh, hiển thị số mạng bằng chữ
@@ -398,10 +398,14 @@ public class SpaceShooter extends Application {
                         obj2.setDead(true);
                         toRemove.add(obj2);
 
-                        // Kích hoạt PowerUp với thời gian hiệu lực 10 giây (10000ms)
-                        player.activatePowerUp(10000);
-
+                    // Random hóa hiệu ứng PowerUp
+                    if (numLives < 4 && Math.random() < 0.5) {
+                        numLives++; // Tăng mạng nếu chưa đạt tối đa
+                        System.out.println("Extra life gained! Lives: " + numLives);
+                    } else {
+                        player.activatePowerUp(8000); // Tăng số lượng đạn trong 10 giây
                         System.out.println("PowerUp activated: Increased bullet count for 10 seconds!");
+                    }
                     }
                 }
             }
