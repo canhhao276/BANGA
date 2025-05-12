@@ -1,9 +1,10 @@
 package game;
 
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 import java.util.List;
+
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public class Player extends GameObject {
 
@@ -22,6 +23,8 @@ public class Player extends GameObject {
     private Image playerImage;
 
     private int bulletCount = 1;
+    private long powerUpEndTime = 0; // Thời gian kết thúc hiệu lực PowerUp
+    private boolean powerUpActive = false; // Trạng thái PowerUp
 
     public void increaseBulletCount() {
         bulletCount++; // Tăng số lượng đạn bắn
@@ -64,9 +67,25 @@ public class Player extends GameObject {
         if (moveForward) y -= SPEED;
         if (moveBackward) y += SPEED;
 
-        // Giới hạn trong màn hình (tính từ góc trên bên trái)
-        x = Math.max(0, Math.min(SpaceShooter.WIDTH - getWidth(), x)); // Giới hạn theo chiều ngang
-        y = Math.max(0, Math.min(SpaceShooter.HEIGHT - getHeight(), y)); // Giới hạn theo chiều dọc
+        // Giới hạn trong màn hình
+        x = Math.max(0, Math.min(SpaceShooter.WIDTH - getWidth(), x));
+        y = Math.max(0, Math.min(SpaceShooter.HEIGHT - getHeight(), y));
+
+        // Kiểm tra nếu PowerUp hết hiệu lực
+        if (powerUpActive && System.currentTimeMillis() > powerUpEndTime) {
+            deactivatePowerUp(); // Hủy hiệu ứng PowerUp
+        }
+    }
+
+    public void activatePowerUp(long duration) {
+        powerUpActive = true; // Kích hoạt PowerUp
+        powerUpEndTime = System.currentTimeMillis() + duration; // Đặt thời gian kết thúc hiệu lực
+        bulletCount++; // Tăng số lượng đạn bắn
+    }
+
+    private void deactivatePowerUp() {
+        powerUpActive = false; // Hủy kích hoạt PowerUp
+        bulletCount = Math.max(1, bulletCount - 1); // Giảm số lượng đạn bắn về mặc định
     }
 
     @Override

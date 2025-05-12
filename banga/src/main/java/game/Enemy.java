@@ -3,8 +3,8 @@ package game;
 import java.util.List;
 
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public class Enemy extends GameObject {
 
@@ -34,7 +34,21 @@ public class Enemy extends GameObject {
     
     @Override
     public void update() {
-        y += SPEED; // Enemy di chuyển xuống dưới
+        // Di chuyển kẻ địch xuống dưới
+        y += SPEED;
+
+        // Giới hạn kẻ địch không đi sát mép trái hoặc phải
+        double margin = 10; // Khoảng cách lùi vào từ mép màn hình
+        if (x < margin) {
+            x = margin; // Đảm bảo không vượt quá mép trái
+        } else if (x > SpaceShooter.WIDTH - margin - getWidth()) {
+            x = SpaceShooter.WIDTH - margin - getWidth(); // Đảm bảo không vượt quá mép phải
+        }
+
+        // Kiểm tra nếu kẻ địch ra khỏi khung hình (phía dưới)
+        if (y > SpaceShooter.HEIGHT) {
+            setDead(true); // Đánh dấu kẻ địch là "dead"
+        }
 
         // Xác suất bắn đạn
         if (Math.random() < SHOOT_PROBABILITY) {

@@ -1,5 +1,8 @@
 package game;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Pos;
@@ -8,16 +11,18 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class SpaceShooter extends Application {
 
@@ -60,7 +65,124 @@ public class SpaceShooter extends Application {
         primaryStage.setTitle("Space Shooter");
 
         // Hiển thị màn hình hướng dẫn ngay khi chương trình khởi chạy
-        showInstructionsScreen(primaryStage);
+        showMainMenu(primaryStage);
+    }
+
+    private void showMainMenu(Stage primaryStage) {
+        VBox rootStart = new VBox(20);
+        rootStart.setAlignment(Pos.CENTER);
+
+        // Thêm ảnh nền
+        Image backgroundImage = new Image("backgroudMainMenu.png");
+        BackgroundImage bgImage = new BackgroundImage(
+            backgroundImage,
+            BackgroundRepeat.NO_REPEAT,
+            BackgroundRepeat.NO_REPEAT,
+            BackgroundPosition.CENTER,
+            new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true)
+        );
+        rootStart.setBackground(new Background(bgImage));
+
+        // Tiêu đề
+        Text title = new Text("Space Shooter");
+        title.setFont(Font.font("Arial", 30));
+        title.setFill(Color.WHITE);
+
+        // Nút START
+        Button startButton = new Button("START");
+        startButton.setFont(Font.font("Arial", 20));
+        startButton.setOnAction(e -> {
+            resetGame(); // Đặt lại trạng thái trò chơi
+            startGame(primaryStage); // Bắt đầu trò chơi mới
+        });
+
+        // Nút INSTRUCTIONS
+        Button instructionsButton = new Button("INSTRUCTIONS");
+        instructionsButton.setFont(Font.font("Arial", 20));
+        instructionsButton.setOnAction(e -> showInstructions(primaryStage));
+
+        // Nút QUIT
+        Button quitButton = new Button("QUIT");
+        quitButton.setFont(Font.font("Arial", 20));
+        quitButton.setOnAction(e -> primaryStage.close());
+
+        rootStart.getChildren().addAll(title, startButton, instructionsButton, quitButton);
+
+        Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
+        primaryStage.setScene(startScene);
+        primaryStage.show();
+    }
+
+    private void showInstructions(Stage primaryStage) {
+        VBox rootInstructions = new VBox(20);
+        rootInstructions.setAlignment(Pos.CENTER);
+        rootInstructions.setStyle("-fx-background-color: black;");
+
+        // Nội dung hướng dẫn
+        Text instructionsText = new Text(
+            "Use the < , ^, v and > keys or the arrow keys to move your spaceship.\n" +
+            "Press SPACE to shoot bullets and destroy the enemies.\n" +
+            "If an enemy reaches the bottom of the screen, you lose a life.\n" +
+            "The game resets if you lose all lives.\n" +
+            "Collect power-ups to increase your score.\n" +
+            "Defeat the boss enemy to level up and increase the difficulty.\n" +
+            "Good luck and have fun!"
+        );
+        instructionsText.setFont(Font.font("Arial", 20));
+        instructionsText.setFill(Color.WHITE);
+        instructionsText.setWrappingWidth(WIDTH - 50);
+
+        // Nút "Back" để quay lại màn hình chính
+        Button backButton = new Button("Back");
+        backButton.setFont(Font.font("Arial", 20));
+        backButton.setOnAction(e -> showMainMenu(primaryStage));
+
+        rootInstructions.getChildren().addAll(instructionsText, backButton);
+
+        Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
+        primaryStage.setScene(instructionsScene);
+        primaryStage.show();
+    }
+
+    private void showStartScreen(Stage primaryStage) {
+        VBox rootStart = new VBox(20);
+        rootStart.setAlignment(Pos.CENTER);
+
+        // Thêm ảnh nền
+        Image backgroundImage = new Image("backgroudMainMenu.png");
+        BackgroundImage bgImage = new BackgroundImage(
+            backgroundImage,
+            BackgroundRepeat.NO_REPEAT,
+            BackgroundRepeat.NO_REPEAT,
+            BackgroundPosition.CENTER,
+            new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true)
+        );
+        rootStart.setBackground(new Background(bgImage));
+
+        // Tiêu đề
+        Text title = new Text("Space Shooter");
+        title.setFont(Font.font("Arial", 30));
+        title.setFill(Color.WHITE);
+
+        // Nút START
+        Button startButton = new Button("START");
+        startButton.setFont(Font.font("Arial", 20));
+        startButton.setOnAction(e -> {
+            // Đặt lại trạng thái trò chơi
+            resetGame();
+            startGame(primaryStage);
+        });
+
+        // Nút QUIT
+        Button quitButton = new Button("QUIT");
+        quitButton.setFont(Font.font("Arial", 20));
+        quitButton.setOnAction(e -> primaryStage.close());
+
+        rootStart.getChildren().addAll(title, startButton, quitButton);
+
+        Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
+        primaryStage.setScene(startScene);
+        primaryStage.show();
     }
 
     private void initGame() {
@@ -80,7 +202,7 @@ public class SpaceShooter extends Application {
                 case UP : player.setMoveForward(true); break;
                 case DOWN : player.setMoveBackward(true); break;
                 case SPACE : 
-                    isShooting = true; // Bắt đầu bắn(sua)
+                    isShooting = true; // Bắt đầu bắn
                 break;
             }
         });
@@ -92,13 +214,17 @@ public class SpaceShooter extends Application {
                 case UP : player.setMoveForward(false); break;
                 case DOWN : player.setMoveBackward(false); break;
                 case SPACE :
-                    isShooting = false; // Ngừng bắn(sua)
+                    isShooting = false; // Ngừng bắn
             }
         });
     }
 
     private void update() {
-        if (!gameRunning) return;
+        if (numLives <= 0) {
+            System.out.println("Game Over! Returning to game over screen...");
+            showGameOverScreen((Stage) root.getScene().getWindow());
+            return;
+        }
 
         // Kiểm tra trạng thái bắn
         if (isShooting) {
@@ -155,11 +281,6 @@ public class SpaceShooter extends Application {
 
         // Cập nhật UI
         scoreLabel.setText("Score: " + score);
-
-        // Kiểm tra nếu hết mạng
-        if (numLives <= 0) {
-            resetGame();
-        }
     }
 
     private void render() {
@@ -227,133 +348,67 @@ public class SpaceShooter extends Application {
     }
     
     private void checkCollisions() {
-        for (GameObject obj1 : gameObjects) {
-            for (GameObject obj2 : gameObjects) {
-                if (obj1 != obj2) {
-                    // Kiểm tra va chạm dựa trên khoảng cách giữa tâm của các đối tượng
-                    double dx = obj1.getX() + obj1.getWidth() / 2 - (obj2.getX() + obj2.getWidth() / 2);
-                    double dy = obj1.getY() + obj1.getHeight() / 2 - (obj2.getY() + obj2.getHeight() / 2);
-                    double distance = Math.sqrt(dx * dx + dy * dy);
+        // Tạo danh sách tạm thời để lưu các đối tượng cần đánh dấu là "dead"
+        List<GameObject> toRemove = new ArrayList<>();
 
-                    // Xác định bán kính va chạm (giảm một chút để tránh va chạm sớm)
-                    double collisionRadius = (Math.min(obj1.getWidth(), obj1.getHeight()) +
-                                            Math.min(obj2.getWidth(), obj2.getHeight())) / 2 * 0.8;
+        for (int i = 0; i < gameObjects.size(); i++) {
+            GameObject obj1 = gameObjects.get(i);
+            for (int j = i + 1; j < gameObjects.size(); j++) {
+                GameObject obj2 = gameObjects.get(j);
 
-                    if (distance < collisionRadius) {
-                        // Xử lý va chạm
-                        if ((obj1 instanceof Bullet && obj2 instanceof Enemy) || 
-                            (obj1 instanceof Enemy && obj2 instanceof Bullet)) {
-                            obj1.setDead(true); // Đánh dấu Bullet là "dead"
-                            obj2.setDead(true); // Đánh dấu Enemy là "dead"
-                            score += 10; // Tăng điểm
-                        } else if (obj1 instanceof Player && obj2 instanceof Enemy) {
-                            obj2.setDead(true);
-                            numLives--;
-                        } else if (obj1 instanceof Bullet && obj2 instanceof BossEnemy) {
-                            Bullet bullet = (Bullet) obj1;
-                            BossEnemy boss = (BossEnemy) obj2;
+                // Sử dụng bounding box để kiểm tra va chạm
+                if (obj1.getBounds().intersects(obj2.getBounds())) {
+                    // Xử lý va chạm
+                    if ((obj1 instanceof Bullet && obj2 instanceof Enemy) || 
+                        (obj1 instanceof Enemy && obj2 instanceof Bullet)) {
+                        // Đánh dấu cả Bullet và Enemy là "dead"
+                        obj1.setDead(true);
+                        obj2.setDead(true);
+                        toRemove.add(obj1);
+                        toRemove.add(obj2);
+                        score += 10; // Tăng điểm
+                    } else if (obj1 instanceof Player && obj2 instanceof Enemy) {
+                        obj2.setDead(true);
+                        toRemove.add(obj2);
+                        numLives--;
+                    } else if (obj1 instanceof Bullet && obj2 instanceof BossEnemy) {
+                        Bullet bullet = (Bullet) obj1;
+                        BossEnemy boss = (BossEnemy) obj2;
 
                         // Gây sát thương cho boss
-                        boss.takeDamage(17); // Gây sát thương 1 cho Boss    (sua)
-                        bullet.setDead(true); // Đánh dấu viên đạn là "chết"
+                        boss.takeDamage(bullet.getDamage());
+                        bullet.setDead(true);
+                        toRemove.add(bullet);
 
-                            // Nếu boss chết, tăng điểm và đánh dấu boss không còn tồn tại
-                            if (boss.isDead()) {
-                                score += 50;
-                                bossExists = false;
-                            }
-                        } 
-                        // Kiểm tra nếu Player trúng đạn của Enemy hoặc BossEnemy
-                        else if (obj1 instanceof Player && obj2 instanceof EnemyBullet) {
-                            obj2.setDead(true); // Đánh dấu viên đạn là "dead"
-                            numLives--; // Giảm số mạng
+                        // Nếu boss chết, tăng điểm và đánh dấu boss không còn tồn tại
+                        if (boss.isDead()) {
+                            score += 50;
+                            bossExists = false;
+                            toRemove.add(boss);
                         }
-                        // Kiểm tra nếu Player thu thập PowerUp
-                        else if (obj1 instanceof Player && obj2 instanceof PowerUp) {
-                            obj2.setDead(true); // Đánh dấu PowerUp là "dead"
+                    } 
+                    // Kiểm tra nếu Player trúng đạn của Enemy hoặc BossEnemy
+                    else if (obj1 instanceof Player && obj2 instanceof EnemyBullet) {
+                        obj2.setDead(true);
+                        toRemove.add(obj2);
+                        numLives--;
+                    }
+                    // Kiểm tra nếu Player thu thập PowerUp
+                    else if (obj1 instanceof Player && obj2 instanceof PowerUp) {
+                        obj2.setDead(true);
+                        toRemove.add(obj2);
 
-                            // Nếu số mạng hiện tại là 4, luôn tăng số đạn bắn
-                            if (numLives == 4) {
-                                player.increaseBulletCount(); // Tăng số đạn bắn
-                                System.out.println("PowerUp: Increased bullet count!");
-                            } else {
-                                // Random hiệu ứng: tăng số đạn bắn hoặc tăng số mạng
-                                if (Math.random() < 0.5) {
-                                    player.increaseBulletCount(); // Tăng số đạn bắn
-                                    System.out.println("PowerUp: Increased bullet count!");
-                                } else {
-                                    numLives++; // Tăng số mạng
-                                    System.out.println("PowerUp: Extra life gained!");
-                                }
-                            }
-                        }
+                        // Kích hoạt PowerUp với thời gian hiệu lực 10 giây (10000ms)
+                        player.activatePowerUp(10000);
+
+                        System.out.println("PowerUp activated: Increased bullet count for 10 seconds!");
                     }
                 }
             }
         }
-    }
 
-private void showStartScreen(Stage primaryStage) {
-    VBox rootStart = new VBox(20);
-    rootStart.setStyle("-fx-background-color: #000000;"); // Đặt màu nền thành đen
-    rootStart.setAlignment(Pos.CENTER);
-
-    // Đặt hình nền
-    Image startImage = new Image("start.png");
-    ImageView startImageView = new ImageView(startImage);
-    startImageView.setFitWidth(WIDTH); // Đặt chiều rộng bằng chiều rộng màn hình
-    startImageView.setFitHeight(HEIGHT); // Đặt chiều cao bằng chiều cao màn hình
-    startImageView.setPreserveRatio(false); // Không giữ tỷ lệ gốc để ảnh vừa khung
-
-    // Tạo nút START
-    Button startButton = new Button("START");
-    startButton.setStyle("-fx-font-size: 20px; -fx-background-color: #4CAF50; -fx-text-fill: white;");
-    startButton.setOnMouseEntered(e -> startButton.setStyle("-fx-font-size: 20px; -fx-background-color: #45a049; -fx-text-fill: white;"));
-    startButton.setOnMouseExited(e -> startButton.setStyle("-fx-font-size: 20px; -fx-background-color: #4CAF50; -fx-text-fill: white;"));
-    startButton.setOnAction(e -> startGame(primaryStage)); // Gắn sự kiện để bắt đầu trò chơi
-
-    // Tạo nút INSTRUCTIONS
-    Button instructionsButton = new Button("INSTRUCTIONS");
-    instructionsButton.setStyle("-fx-font-size: 20px; -fx-background-color: #2196F3; -fx-text-fill: white;");
-    instructionsButton.setOnMouseEntered(e -> instructionsButton.setStyle("-fx-font-size: 20px; -fx-background-color: #1e88e5; -fx-text-fill: white;"));
-    instructionsButton.setOnMouseExited(e -> instructionsButton.setStyle("-fx-font-size: 20px; -fx-background-color: #2196F3; -fx-text-fill: white;"));
-    instructionsButton.setOnAction(e -> showInstructionsScreen(primaryStage));
-
-    // Tạo nút QUIT
-    Button quitButton = new Button("QUIT");
-    quitButton.setStyle("-fx-font-size: 20px; -fx-background-color: #f44336; -fx-text-fill: white;");
-    quitButton.setOnMouseEntered(e -> quitButton.setStyle("-fx-font-size: 20px; -fx-background-color: #d32f2f; -fx-text-fill: white;"));
-    quitButton.setOnMouseExited(e -> quitButton.setStyle("-fx-font-size: 20px; -fx-background-color: #f44336; -fx-text-fill: white;"));
-    quitButton.setOnAction(e -> System.exit(0));
-
-    // Thêm các nút vào giao diện
-    rootStart.getChildren().addAll(startButton, instructionsButton, quitButton);
-
-    Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
-    primaryStage.setScene(startScene);
-    primaryStage.show();
-}
-
-    private void showInstructionsScreen(Stage primaryStage) {
-        VBox rootInstructions = new VBox(20);
-        rootInstructions.setAlignment(Pos.CENTER);
-        rootInstructions.setStyle("-fx-background-color: black;");
-
-        // Đặt hình nền
-        Image instructionsImage = new Image("instructions.png");
-        ImageView instructionsImageView = new ImageView(instructionsImage);
-        instructionsImageView.setFitWidth(WIDTH); // Đặt chiều rộng bằng chiều rộng màn hình
-        instructionsImageView.setFitHeight(HEIGHT); // Đặt chiều cao bằng chiều cao màn hình
-        instructionsImageView.setPreserveRatio(false); // Không giữ tỷ lệ gốc để ảnh vừa khung
-
-        Button backButton = new Button("Back");
-        backButton.setOnAction(e -> showStartScreen(primaryStage));
-
-        rootInstructions.getChildren().addAll(instructionsImageView, backButton);
-
-        Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
-        primaryStage.setScene(instructionsScene);
-        primaryStage.show();
+        // Loại bỏ các đối tượng đã đánh dấu là "dead"
+        gameObjects.removeAll(toRemove);
     }
 
     private void startGame(Stage primaryStage) {
@@ -401,18 +456,50 @@ private void showStartScreen(Stage primaryStage) {
         gameLoop.start();
     }
 
-    // Removed duplicate start(Stage primaryStage) method to resolve the error.
-
-    private void resetGame() {
-        gameRunning = false;
+    private void resetToStartScreen(Stage primaryStage) {
+        // Dừng game loop nếu đang chạy
         if (gameLoop != null) {
-            gameLoop.stop(); // Dừng vòng lặp trò chơi
+            gameLoop.stop();
         }
 
-        System.out.println("Game Over! Final Score: " + score);
+        // Đặt lại trạng thái trò chơi
+        resetGame();
 
         // Hiển thị màn hình bắt đầu
-        Stage primaryStage = (Stage) root.getScene().getWindow();
-        showStartScreen(primaryStage);
+        showMainMenu(primaryStage);
+    }
+
+    private void resetGame() {
+        gameObjects.clear(); // Xóa tất cả các đối tượng trong trò chơi
+        numLives = 3;        // Đặt lại số mạng
+        score = 0;           // Đặt lại điểm số
+        bossExists = false;  // Đặt lại trạng thái boss
+        gameRunning = false; // Đặt lại trạng thái trò chơi
+        isShooting = false;  // Đặt lại trạng thái bắn
+    }
+
+    private void showGameOverScreen(Stage primaryStage) {
+        VBox rootGameOver = new VBox(20);
+        rootGameOver.setAlignment(Pos.CENTER);
+        rootGameOver.setStyle("-fx-background-color: black;");
+
+        // Tiêu đề "Game Over"
+        Text gameOverText = new Text("GAME OVER");
+        gameOverText.setFont(Font.font("Arial", 50));
+        gameOverText.setFill(Color.RED);
+
+        // Nút "Quay về" để quay lại màn hình chính
+        Button backButton = new Button("Quay về");
+        backButton.setFont(Font.font("Arial", 20));
+        backButton.setOnAction(e -> {
+            resetGame(); // Đặt lại trạng thái trò chơi
+            showMainMenu(primaryStage); // Hiển thị màn hình chính
+        });
+
+        rootGameOver.getChildren().addAll(gameOverText, backButton);
+
+        Scene gameOverScene = new Scene(rootGameOver, WIDTH, HEIGHT);
+        primaryStage.setScene(gameOverScene);
+        primaryStage.show();
     }
 }
