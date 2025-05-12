@@ -427,6 +427,7 @@ public class SpaceShooter extends Application {
         root.getChildren().add(canvas);
 
         scoreLabel = new Label("Score: 0");
+        scoreLabel.setFont(Font.font("Arial", 20)); // Tăng kích cỡ chữ lên 24
         scoreLabel.setTextFill(Color.WHITE);
         scoreLabel.setLayoutX(10);
         scoreLabel.setLayoutY(10);
