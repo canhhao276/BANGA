@@ -416,6 +416,11 @@ public class SpaceShooter extends Application {
     }
 
     private void startGame(Stage primaryStage) {
+        // Dừng game loop nếu đang chạy
+        if (gameLoop != null) {
+            gameLoop.stop();
+        }
+
         root = new Pane();
         Canvas canvas = new Canvas(WIDTH, HEIGHT); // Đặt kích thước Canvas theo khung hình mới
         gc = canvas.getGraphicsContext2D();
@@ -450,6 +455,7 @@ public class SpaceShooter extends Application {
         initGame();
         initEventHandlers();
 
+        // Tạo game loop mới
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -491,16 +497,41 @@ public class SpaceShooter extends Application {
         Text gameOverText = new Text("GAME OVER");
         gameOverText.setFont(Font.font("Arial", 50));
         gameOverText.setFill(Color.RED);
+        gameOverText.setTranslateY(-30); // Di chuyển chữ "GAME OVER" lên phía trên
 
-        // Nút "Quay về" để quay lại màn hình chính
-        Button backButton = new Button("Quay về");
-        backButton.setFont(Font.font("Arial", 20));
-        backButton.setOnAction(e -> {
+        // Hiển thị điểm số
+        Text scoreText = new Text("Your Score: " + score);
+        scoreText.setFont(Font.font("Arial", 30));
+        scoreText.setFill(Color.WHITE);
+
+        // Nút "Thử Lại" để bắt đầu một ván chơi mới
+        Button retryButton = new Button("Try Again");
+        retryButton.setFont(Font.font("Arial", 25));
+        retryButton.setStyle("-fx-background-color: gray; -fx-text-fill: white;"); // Màu nền xám, chữ trắng
+        retryButton.setOnAction(e -> {
+            resetGame(); // Đặt lại trạng thái trò chơi
+            startGame(primaryStage); // Bắt đầu trò chơi mới
+        });
+
+        // Hiệu ứng khi di chuột vào nút "Try Again"
+        retryButton.setOnMouseEntered(e -> retryButton.setStyle("-fx-background-color: lightgray; -fx-text-fill: black;")); // Nổi bật
+        retryButton.setOnMouseExited(e -> retryButton.setStyle("-fx-background-color: gray; -fx-text-fill: white;")); // Trở lại bình thường
+
+        // Nút "Thoát" để quay lại màn hình chính
+        Button exitButton = new Button("Exit Game");
+        exitButton.setFont(Font.font("Arial", 25));
+        exitButton.setStyle("-fx-background-color: red; -fx-text-fill: white;"); // Màu nền đỏ, chữ trắng
+        exitButton.setOnAction(e -> {
             resetGame(); // Đặt lại trạng thái trò chơi
             showMainMenu(primaryStage); // Hiển thị màn hình chính
         });
 
-        rootGameOver.getChildren().addAll(gameOverText, backButton);
+        // Hiệu ứng khi di chuột vào nút "Exit Game"
+        exitButton.setOnMouseEntered(e -> exitButton.setStyle("-fx-background-color: darkred; -fx-text-fill: white;")); // Nổi bật
+        exitButton.setOnMouseExited(e -> exitButton.setStyle("-fx-background-color: red; -fx-text-fill: white;")); // Trở lại bình thường
+
+        // Thêm các thành phần vào giao diện
+        rootGameOver.getChildren().addAll(gameOverText, scoreText, retryButton, exitButton);
 
         Scene gameOverScene = new Scene(rootGameOver, WIDTH, HEIGHT);
         primaryStage.setScene(gameOverScene);
