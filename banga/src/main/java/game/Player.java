@@ -26,42 +26,39 @@ public class Player extends GameObject {
     private long powerUpEndTime = 0; // Thời gian kết thúc hiệu lực PowerUp
     private boolean powerUpActive = false; // Trạng thái PowerUp
 
-    public void increaseBulletCount() {
-        bulletCount++; // Tăng số lượng đạn bắn
-    } 
+    // Hiệu ứng nhấp nháy
+    private boolean isBlinking; // Trạng thái nhấp nháy
+    private double blinkOpacity; // Độ trong suốt khi nhấp nháy
+    private int blinkTimer; // Bộ đếm thời gian nhấp nháy
+    private static final int BLINK_DURATION = 60; // Thời gian nhấp nháy (60 frame ~ 1 giây)
 
     public Player(double x, double y) {
         super(x, y, WIDTH, HEIGHT);
         this.health = 3; // mặc định 3 mạng
         this.dead = false;
 
-        //tải ảnh lên
+        // Tải ảnh lên
         this.playerImage = new Image("player.png");
-    }
 
-    @Override
-    public double getWidth() {
-        return WIDTH;
-    }
-
-    @Override
-    public double getHeight() {
-        return HEIGHT;
-    }
-
-    public int getHealth() {
-        return health;
-    }
-
-    public void setHealth(int health) {
-        this.health = health;
-        if (this.health <= 0) {
-            this.dead = true;
-        }
+        // Khởi tạo hiệu ứng nhấp nháy
+        this.isBlinking = false;
+        this.blinkOpacity = 1.0;
+        this.blinkTimer = 0;
     }
 
     @Override
     public void update() {
+        // Nếu đang nhấp nháy, giảm thời gian nhấp nháy
+        if (isBlinking) {
+            blinkTimer--;
+            blinkOpacity = (blinkTimer / 5 % 2 == 0) ? 0.5 : 1.0; // Nhấp nháy mờ đi
+            if (blinkTimer <= 0) {
+                isBlinking = false; // Kết thúc nhấp nháy
+                blinkOpacity = 1.0; // Trở lại trạng thái bình thường
+            }
+        }
+
+        // Di chuyển Player
         if (moveLeft) x -= SPEED;
         if (moveRight) x += SPEED;
         if (moveForward) y -= SPEED;
@@ -77,6 +74,25 @@ public class Player extends GameObject {
         }
     }
 
+    @Override
+    public void render(GraphicsContext gc) {
+        gc.setGlobalAlpha(blinkOpacity); // Đặt độ trong suốt
+        if (playerImage != null) {
+            // Vẽ ảnh player từ góc trên bên trái
+            gc.drawImage(playerImage, x, y, WIDTH, HEIGHT);
+        } else {
+            // Nếu không tải được ảnh, vẽ hình chữ nhật thay thế
+            gc.setFill(Color.CYAN);
+            gc.fillRect(x, y, WIDTH, HEIGHT);
+        }
+        gc.setGlobalAlpha(1.0); // Khôi phục độ trong suốt bình thường
+    }
+
+    public void triggerBlink() {
+        isBlinking = true;
+        blinkTimer = BLINK_DURATION; // Đặt thời gian nhấp nháy
+    }
+
     public void activatePowerUp(long duration) {
         powerUpActive = true; // Kích hoạt PowerUp
         powerUpEndTime = System.currentTimeMillis() + duration; // Đặt thời gian kết thúc hiệu lực
@@ -86,26 +102,6 @@ public class Player extends GameObject {
     private void deactivatePowerUp() {
         powerUpActive = false; // Hủy kích hoạt PowerUp
         bulletCount = Math.max(1, bulletCount - 1); // Giảm số lượng đạn bắn về mặc định
-    }
-
-    @Override
-    public void render(GraphicsContext gc) {
-        if (playerImage != null) {
-            // Vẽ ảnh player từ góc trên bên trái
-            gc.drawImage(playerImage, x, y, WIDTH, HEIGHT);
-        } else {
-            // Nếu không tải được ảnh, vẽ hình chữ nhật thay thế
-            gc.setFill(Color.CYAN);
-            gc.fillRect(x, y, WIDTH, HEIGHT);
-        }
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public void setY(double y) {
-        this.y = y;
     }
 
     public void setMoveLeft(boolean moveLeft) {
@@ -141,7 +137,9 @@ public class Player extends GameObject {
     public boolean isDead() {
         return dead;
     }
+
+    public void setX(double i) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setX'");
+    }
 }
-
-
-

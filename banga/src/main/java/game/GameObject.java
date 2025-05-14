@@ -15,6 +15,9 @@ public abstract class GameObject {
     protected double width;
     protected double height;
 
+    // Trạng thái "dead" của đối tượng
+    protected boolean isDead;
+
     /**
      * Tạo một đối tượng GameObject với vị trí và kích thước ban đầu.
      * @param x Tọa độ X
@@ -27,6 +30,7 @@ public abstract class GameObject {
         this.y = y;
         this.width = width;
         this.height = height;
+        this.isDead = false; // Mặc định đối tượng chưa "chết"
     }
 
     /**
@@ -44,7 +48,17 @@ public abstract class GameObject {
      * Kiểm tra xem đối tượng có "chết" chưa (để loại bỏ).
      * @return true nếu đối tượng đã bị tiêu diệt hoặc cần xóa
      */
-    public abstract boolean isDead();
+    public boolean isDead() {
+        return isDead;
+    }
+
+    /**
+     * Đặt trạng thái "dead" cho đối tượng.
+     * @param isDead true nếu đối tượng cần bị xóa
+     */
+    protected void setDead(boolean isDead) {
+        this.isDead = isDead;
+    }
 
     /**
      * Lấy tọa độ X hiện tại.
@@ -90,6 +104,4 @@ public abstract class GameObject {
     public double getHeight() {
         return height;
     }
-
-    protected abstract void setDead(boolean b);
 }

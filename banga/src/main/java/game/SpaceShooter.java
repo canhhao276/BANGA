@@ -90,15 +90,17 @@ private void showMainMenu(Stage primaryStage) {
             scrollingBackground.render(gc); // Vẽ background
 
             // Vẽ giao diện màn hình chính
-            gc.setFill(Color.WHITE);
-            gc.setFont(Font.font("Arial", 30));
-            gc.fillText("Space Shooter", WIDTH / 2 - 100, HEIGHT / 2 - 100);
+            gc.setFill(Color.CYAN); // Đặt màu chữ là xanh dương nhạt
+            gc.setFont(Font.font("Arial", 40)); // Đặt phông chữ lớn hơn
+
+            // Vẽ tiêu đề
+            gc.fillText("Space Shooter", WIDTH / 2 - 150, HEIGHT / 2 - 150);
 
             // Vẽ các nút
-            gc.setFont(Font.font("Arial", 20));
-            gc.fillText("START", WIDTH / 2 - 50, HEIGHT / 2);
-            gc.fillText("INSTRUCTIONS", WIDTH / 2 - 100, HEIGHT / 2 + 50);
-            gc.fillText("QUIT", WIDTH / 2 - 50, HEIGHT / 2 + 100);
+            gc.setFont(Font.font("Arial", 30)); // Đặt phông chữ nhỏ hơn cho các nút
+            gc.fillText("START", WIDTH / 2 - 60, HEIGHT / 2 - 50);
+            gc.fillText("INSTRUCTIONS", WIDTH / 2 - 120, HEIGHT / 2);
+            gc.fillText("QUIT", WIDTH / 2 - 40, HEIGHT / 2 + 50);
         }
     };
     menuLoop.start();
@@ -111,14 +113,15 @@ private void showMainMenu(Stage primaryStage) {
         double x = event.getX();
         double y = event.getY();
 
-        if (x >= WIDTH / 2 - 50 && x <= WIDTH / 2 + 50 && y >= HEIGHT / 2 - 20 && y <= HEIGHT / 2 + 20) {
+        // Kiểm tra vị trí nhấp chuột để xử lý các nút
+        if (x >= WIDTH / 2 - 60 && x <= WIDTH / 2 + 60 && y >= HEIGHT / 2 - 70 && y <= HEIGHT / 2 - 30) {
             menuLoop.stop();
             resetGame();
             startGame(primaryStage);
-        } else if (x >= WIDTH / 2 - 100 && x <= WIDTH / 2 + 100 && y >= HEIGHT / 2 + 30 && y <= HEIGHT / 2 + 70) {
+        } else if (x >= WIDTH / 2 - 120 && x <= WIDTH / 2 + 120 && y >= HEIGHT / 2 - 10 && y <= HEIGHT / 2 + 30) {
             menuLoop.stop();
             showInstructions(primaryStage);
-        } else if (x >= WIDTH / 2 - 50 && x <= WIDTH / 2 + 50 && y >= HEIGHT / 2 + 80 && y <= HEIGHT / 2 + 120) {
+        } else if (x >= WIDTH / 2 - 40 && x <= WIDTH / 2 + 40 && y >= HEIGHT / 2 + 30 && y <= HEIGHT / 2 + 70) {
             primaryStage.close();
         }
     });
@@ -140,20 +143,32 @@ private void showInstructions(Stage primaryStage) {
             scrollingBackground.render(gc); // Vẽ background
 
             // Vẽ nội dung hướng dẫn
-            gc.setFill(Color.WHITE);
-            gc.setFont(Font.font("Arial", 20));
+            gc.setFill(Color.CYAN); // Đặt màu chữ là xanh dương nhạt
+            gc.setFont(Font.font("Arial", 25)); // Đặt font chữ lớn hơn
             gc.fillText("Use the arrow keys to move your spaceship.", 50, 200);
             gc.fillText("Press SPACE to shoot bullets.", 50, 250);
             gc.fillText("Avoid enemies and collect power-ups.", 50, 300);
-            gc.fillText("Press BACK to return to the main menu.", 50, 350);
         }
     };
     instructionsLoop.start();
 
+    // Thêm nút "Back" để quay lại màn hình chính
+    Button backButton = new Button("Back");
+    backButton.setFont(Font.font("Arial", 30)); // Tăng kích thước font chữ
+    backButton.setStyle("-fx-background-color: gray; -fx-text-fill: white;");
+    backButton.setLayoutX(WIDTH / 2 - 50); // Đặt nút ở giữa màn hình
+    backButton.setLayoutY(HEIGHT - 200); // Đưa nút lên trên một chút
+    backButton.setOnAction(e -> {
+        instructionsLoop.stop(); // Dừng vòng lặp nền động
+        showMainMenu(primaryStage); // Quay lại màn hình chính
+    });
+
+    rootInstructions.getChildren().add(backButton);
+
     Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
     primaryStage.setScene(instructionsScene);
 
-    // Xử lý sự kiện quay lại màn hình chính
+    // Xử lý sự kiện quay lại màn hình chính bằng phím BACK_SPACE
     instructionsScene.setOnKeyPressed(event -> {
         if (event.getCode().toString().equals("BACK_SPACE")) {
             instructionsLoop.stop();
@@ -278,9 +293,9 @@ private void showInstructions(Stage primaryStage) {
 
                 // Giới hạn di chuyển theo chiều dọc
                 if (player.getY() < 0) {
-                    player.setY(0); // Không cho vượt quá phía trên
+                    player.setX(0); // Không cho vượt quá phía trên
                 } else if (player.getY() + player.getHeight() > HEIGHT) {
-                    player.setY(HEIGHT - player.getHeight()); // Không cho vượt quá phía dưới
+                    player.setX(HEIGHT - player.getHeight()); // Không cho vượt quá phía dưới
                 }
             }
 
@@ -393,7 +408,7 @@ private void checkCollisions() {
                         score += 10;
 
                         // Random tỷ lệ xuất hiện PowerUp
-                        double dropChance = 0.2; // 30% tỷ lệ xuất hiện PowerUp
+                        double dropChance = 0.2; // 20% tỷ lệ xuất hiện PowerUp
                         if (Math.random() < dropChance) {
                             double powerUpX = enemy.getX();
                             double powerUpY = enemy.getY();
@@ -417,6 +432,17 @@ private void checkCollisions() {
 
                     // Giảm số mạng của Player
                     numLives--;
+
+                    // Kích hoạt hiệu ứng nhấp nháy cho Player
+                    player.triggerBlink();
+
+                    // Kiểm tra nếu số mạng giảm xuống 0
+                    if (numLives <= 0) {
+                        gameRunning = false; // Kết thúc trò chơi
+                        System.out.println("Game Over! Returning to game over screen...");
+                        showGameOverScreen((Stage) root.getScene().getWindow());
+                        return;
+                    }
                 }
 
                 // Xử lý va chạm giữa Bullet và BossEnemy
@@ -448,6 +474,17 @@ private void checkCollisions() {
 
                     // Giảm số mạng của Player
                     numLives--;
+
+                    // Kích hoạt hiệu ứng nhấp nháy cho Player
+                    player.triggerBlink();
+
+                    // Kiểm tra nếu số mạng giảm xuống 0
+                    if (numLives <= 0) {
+                        gameRunning = false; // Kết thúc trò chơi
+                        System.out.println("Game Over! Returning to game over screen...");
+                        showGameOverScreen((Stage) root.getScene().getWindow());
+                        return;
+                    }
                 }
 
                 // Xử lý va chạm giữa Player và PowerUp
@@ -458,6 +495,9 @@ private void checkCollisions() {
                     // Đánh dấu PowerUp là "dead"
                     powerUp.setDead(true);
                     toRemove.add(powerUp);
+
+                    // Tạo hiệu ứng động tại vị trí PowerUp
+                    gameObjects.add(new PowerUpEffect(powerUp.getX(), powerUp.getY()));
 
                     // Random hóa hiệu ứng PowerUp
                     if (numLives < 4 && Math.random() < 0.5) {

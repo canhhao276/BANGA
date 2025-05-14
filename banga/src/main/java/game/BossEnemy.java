@@ -12,8 +12,8 @@ public class BossEnemy extends Enemy {
 
     private int health;
 
-    private static final int WIDTH = 50;
-    static final int HEIGHT = 50;
+    private static final int WIDTH = 60;
+    static final int HEIGHT = 60;
 
     private double horizontalSpeed;
 
