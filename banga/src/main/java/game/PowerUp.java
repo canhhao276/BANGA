@@ -11,8 +11,8 @@ import javafx.scene.paint.Color;
 public class PowerUp extends GameObject {
 
     // Dimensions of the power-up
-    public static final int WIDTH = 35;
-    public static final int HEIGHT = 35;
+    public static final int WIDTH = 50;
+    public static final int HEIGHT = 50;
 
     // Fall speed of the power-up
     private static final double SPEED = 1;

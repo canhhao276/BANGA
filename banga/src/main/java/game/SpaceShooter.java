@@ -52,6 +52,11 @@ public class SpaceShooter extends Application {
     private  static final long SHOOT_DELAY = 200_000_000; // 300ms(đơn vị: nanoseconds)(sua)
     private boolean isShooting = false; // Biến theo dõi trạng thái bắn(sua)
 
+    private double backgroundY = 0; // Vị trí Y của ảnh nền
+    private double backgroundSpeed = 1; // Tốc độ di chuyển của ảnh nền
+
+    private ScrollingBackground scrollingBackground;
+
     public static List<GameObject> getGameObjects() {
     return gameObjects;
     }
@@ -64,85 +69,100 @@ public class SpaceShooter extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Space Shooter");
 
-        // Hiển thị màn hình hướng dẫn ngay khi chương trình khởi chạy
+        // Khởi tạo background động
+        scrollingBackground = new ScrollingBackground("background.png", WIDTH, HEIGHT);
+
+        // Hiển thị màn hình chính
         showMainMenu(primaryStage);
     }
 
-    private void showMainMenu(Stage primaryStage) {
-        VBox rootStart = new VBox(20);
-        rootStart.setAlignment(Pos.CENTER);
+private void showMainMenu(Stage primaryStage) {
+    Pane rootStart = new Pane();
+    Canvas canvas = new Canvas(WIDTH, HEIGHT);
+    GraphicsContext gc = canvas.getGraphicsContext2D();
+    rootStart.getChildren().add(canvas);
 
-        // Thêm ảnh nền
-        Image backgroundImage = new Image("backgroudMainMenu.png");
-        BackgroundImage bgImage = new BackgroundImage(
-            backgroundImage,
-            BackgroundRepeat.NO_REPEAT,
-            BackgroundRepeat.NO_REPEAT,
-            BackgroundPosition.CENTER,
-            new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true)
-        );
-        rootStart.setBackground(new Background(bgImage));
+    // Tạo AnimationTimer để cập nhật và vẽ background động
+    AnimationTimer menuLoop = new AnimationTimer() {
+        @Override
+        public void handle(long now) {
+            scrollingBackground.update(); // Cập nhật vị trí background
+            scrollingBackground.render(gc); // Vẽ background
 
-        // Tiêu đề
-        Text title = new Text("Space Shooter");
-        title.setFont(Font.font("Arial", 30));
-        title.setFill(Color.WHITE);
+            // Vẽ giao diện màn hình chính
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", 30));
+            gc.fillText("Space Shooter", WIDTH / 2 - 100, HEIGHT / 2 - 100);
 
-        // Nút START
-        Button startButton = new Button("START");
-        startButton.setFont(Font.font("Arial", 20));
-        startButton.setOnAction(e -> {
-            resetGame(); // Đặt lại trạng thái trò chơi
-            startGame(primaryStage); // Bắt đầu trò chơi mới
-        });
+            // Vẽ các nút
+            gc.setFont(Font.font("Arial", 20));
+            gc.fillText("START", WIDTH / 2 - 50, HEIGHT / 2);
+            gc.fillText("INSTRUCTIONS", WIDTH / 2 - 100, HEIGHT / 2 + 50);
+            gc.fillText("QUIT", WIDTH / 2 - 50, HEIGHT / 2 + 100);
+        }
+    };
+    menuLoop.start();
 
-        // Nút INSTRUCTIONS
-        Button instructionsButton = new Button("INSTRUCTIONS");
-        instructionsButton.setFont(Font.font("Arial", 20));
-        instructionsButton.setOnAction(e -> showInstructions(primaryStage));
+    Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
+    primaryStage.setScene(startScene);
 
-        // Nút QUIT
-        Button quitButton = new Button("QUIT");
-        quitButton.setFont(Font.font("Arial", 20));
-        quitButton.setOnAction(e -> primaryStage.close());
+    // Xử lý sự kiện chuột cho các nút
+    startScene.setOnMouseClicked(event -> {
+        double x = event.getX();
+        double y = event.getY();
 
-        rootStart.getChildren().addAll(title, startButton, instructionsButton, quitButton);
+        if (x >= WIDTH / 2 - 50 && x <= WIDTH / 2 + 50 && y >= HEIGHT / 2 - 20 && y <= HEIGHT / 2 + 20) {
+            menuLoop.stop();
+            resetGame();
+            startGame(primaryStage);
+        } else if (x >= WIDTH / 2 - 100 && x <= WIDTH / 2 + 100 && y >= HEIGHT / 2 + 30 && y <= HEIGHT / 2 + 70) {
+            menuLoop.stop();
+            showInstructions(primaryStage);
+        } else if (x >= WIDTH / 2 - 50 && x <= WIDTH / 2 + 50 && y >= HEIGHT / 2 + 80 && y <= HEIGHT / 2 + 120) {
+            primaryStage.close();
+        }
+    });
 
-        Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
-        primaryStage.setScene(startScene);
-        primaryStage.show();
-    }
+    primaryStage.show();
+}
 
-    private void showInstructions(Stage primaryStage) {
-        VBox rootInstructions = new VBox(20);
-        rootInstructions.setAlignment(Pos.CENTER);
-        rootInstructions.setStyle("-fx-background-color: black;");
+private void showInstructions(Stage primaryStage) {
+    Pane rootInstructions = new Pane();
+    Canvas canvas = new Canvas(WIDTH, HEIGHT);
+    GraphicsContext gc = canvas.getGraphicsContext2D();
+    rootInstructions.getChildren().add(canvas);
 
-        // Nội dung hướng dẫn
-        Text instructionsText = new Text(
-            "Use the < , ^, v and > keys or the arrow keys to move your spaceship.\n" +
-            "Press SPACE to shoot bullets and destroy the enemies.\n" +
-            "If an enemy reaches the bottom of the screen, you lose a life.\n" +
-            "The game resets if you lose all lives.\n" +
-            "Collect power-ups to increase your score.\n" +
-            "Defeat the boss enemy to level up and increase the difficulty.\n" +
-            "Good luck and have fun!"
-        );
-        instructionsText.setFont(Font.font("Arial", 20));
-        instructionsText.setFill(Color.WHITE);
-        instructionsText.setWrappingWidth(WIDTH - 50);
+    // Tạo AnimationTimer để cập nhật và vẽ background động
+    AnimationTimer instructionsLoop = new AnimationTimer() {
+        @Override
+        public void handle(long now) {
+            scrollingBackground.update(); // Cập nhật vị trí background
+            scrollingBackground.render(gc); // Vẽ background
 
-        // Nút "Back" để quay lại màn hình chính
-        Button backButton = new Button("Back");
-        backButton.setFont(Font.font("Arial", 20));
-        backButton.setOnAction(e -> showMainMenu(primaryStage));
+            // Vẽ nội dung hướng dẫn
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", 20));
+            gc.fillText("Use the arrow keys to move your spaceship.", 50, 200);
+            gc.fillText("Press SPACE to shoot bullets.", 50, 250);
+            gc.fillText("Avoid enemies and collect power-ups.", 50, 300);
+            gc.fillText("Press BACK to return to the main menu.", 50, 350);
+        }
+    };
+    instructionsLoop.start();
 
-        rootInstructions.getChildren().addAll(instructionsText, backButton);
+    Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
+    primaryStage.setScene(instructionsScene);
 
-        Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
-        primaryStage.setScene(instructionsScene);
-        primaryStage.show();
-    }
+    // Xử lý sự kiện quay lại màn hình chính
+    instructionsScene.setOnKeyPressed(event -> {
+        if (event.getCode().toString().equals("BACK_SPACE")) {
+            instructionsLoop.stop();
+            showMainMenu(primaryStage);
+        }
+    });
+
+    primaryStage.show();
+}
 
     private void showStartScreen(Stage primaryStage) {
         VBox rootStart = new VBox(20);
@@ -226,6 +246,12 @@ public class SpaceShooter extends Application {
             return;
         }
 
+        // Cập nhật vị trí ảnh nền
+        backgroundY += backgroundSpeed;
+        if (backgroundY >= HEIGHT) {
+            backgroundY = 0; // Lặp lại ảnh nền
+        }
+
         // Kiểm tra trạng thái bắn
         if (isShooting) {
             long currentTime = System.nanoTime();
@@ -285,7 +311,8 @@ public class SpaceShooter extends Application {
     private void render() {
         // Vẽ ảnh nền
         if (backgroundImage != null) {
-            gc.drawImage(backgroundImage, 0, 0, WIDTH, HEIGHT); // Vẽ ảnh nền toàn màn hình
+            gc.drawImage(backgroundImage, 0, backgroundY, WIDTH, HEIGHT); // Vẽ ảnh nền ở vị trí hiện tại
+            gc.drawImage(backgroundImage, 0, backgroundY - HEIGHT, WIDTH, HEIGHT); // Vẽ ảnh nền phía trên
         } else {
             gc.setFill(Color.BLACK); // Nếu không tải được ảnh, vẽ nền màu đen
             gc.fillRect(0, 0, WIDTH, HEIGHT);
