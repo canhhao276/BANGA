@@ -10,7 +10,7 @@ public class Player extends GameObject {
 
     private static final int WIDTH = 80;
     private static final int HEIGHT = 80;
-    private static final double SPEED = 3.5;
+    private static final double SPEED = 3;
 
     private boolean moveLeft;
     private boolean moveRight;

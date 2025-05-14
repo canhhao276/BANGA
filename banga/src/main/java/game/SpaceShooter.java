@@ -277,7 +277,6 @@ public class SpaceShooter extends Application {
             spawnBossEnemy();
             lastBossSpawnScore += 400; // Cập nhật mốc điểm tiếp theo
         }
-        spawnPowerUp(); // Gọi phương thức sinh power-up
 
         // Cập nhật UI
         scoreLabel.setText("Score: " + score);
@@ -318,17 +317,7 @@ public class SpaceShooter extends Application {
         }
     }
 
-    private void spawnPowerUp() {
-        // Xác suất xuất hiện power-up (ví dụ: 0.002 = 0.2%)
-        double SPAWN_PROBABILITY = 0.0005;
 
-        if (Math.random() < SPAWN_PROBABILITY) {
-            // Tạo power-up tại một vị trí ngẫu nhiên trên màn hình
-            double x = Math.random() * (WIDTH - PowerUp.WIDTH) + PowerUp.WIDTH / 2;
-            double y = -PowerUp.HEIGHT / 2; // Xuất hiện từ phía trên màn hình
-            gameObjects.add(new PowerUp(x, y));
-        }
-    }
 
     private void spawnEnemy() {
         // Tăng xác suất xuất hiện kẻ địch dựa trên điểm số
@@ -375,6 +364,14 @@ private void checkCollisions() {
 
                         // Tăng điểm
                         score += 10;
+
+                        // Random tỷ lệ xuất hiện PowerUp
+                        double dropChance = 0.2; // 30% tỷ lệ xuất hiện PowerUp
+                        if (Math.random() < dropChance) {
+                            double powerUpX = enemy.getX();
+                            double powerUpY = enemy.getY();
+                            gameObjects.add(new PowerUp(powerUpX, powerUpY)); // Tạo PowerUp tại vị trí Enemy
+                        }
                     }
 
                     // Thêm Bullet và Enemy vào danh sách cần xóa
