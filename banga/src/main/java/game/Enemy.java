@@ -10,8 +10,8 @@ public class Enemy extends GameObject {
 
     private static final double SHOOT_PROBABILITY = 0.001;
 
-    protected static final int WIDTH = 42;
-    protected static final int HEIGHT = 42;
+    protected static final int WIDTH = 60;
+    protected static final int HEIGHT = 60;
 
     public static double SPEED = 0.5;
 

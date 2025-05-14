@@ -347,73 +347,110 @@ public class SpaceShooter extends Application {
         gameObjects.add(new BossEnemy(WIDTH / 2, -BossEnemy.HEIGHT / 2));
     }
     
-    private void checkCollisions() {
-        // Tạo danh sách tạm thời để lưu các đối tượng cần đánh dấu là "dead"
-        List<GameObject> toRemove = new ArrayList<>();
+private void checkCollisions() {
+    // Tạo danh sách tạm thời để lưu các đối tượng cần đánh dấu là "dead"
+    List<GameObject> toRemove = new ArrayList<>();
 
-        for (int i = 0; i < gameObjects.size(); i++) {
-            GameObject obj1 = gameObjects.get(i);
-            for (int j = i + 1; j < gameObjects.size(); j++) {
-                GameObject obj2 = gameObjects.get(j);
+    for (int i = 0; i < gameObjects.size(); i++) {
+        GameObject obj1 = gameObjects.get(i);
 
-                // Sử dụng bounding box để kiểm tra va chạm
-                if (obj1.getBounds().intersects(obj2.getBounds())) {
-                    // Xử lý va chạm
-                    if ((obj1 instanceof Bullet && obj2 instanceof Enemy) || 
-                        (obj1 instanceof Enemy && obj2 instanceof Bullet)) {
-                        // Đánh dấu cả Bullet và Enemy là "dead"
-                        obj1.setDead(true);
-                        obj2.setDead(true);
-                        toRemove.add(obj1);
-                        toRemove.add(obj2);
-                        score += 10; // Tăng điểm
-                    } else if (obj1 instanceof Player && obj2 instanceof Enemy) {
-                        obj2.setDead(true);
-                        toRemove.add(obj2);
-                        numLives--;
-                    } else if (obj1 instanceof Bullet && obj2 instanceof BossEnemy) {
-                        Bullet bullet = (Bullet) obj1;
-                        BossEnemy boss = (BossEnemy) obj2;
+        for (int j = i + 1; j < gameObjects.size(); j++) {
+            GameObject obj2 = gameObjects.get(j);
 
-                        // Gây sát thương cho boss
-                        boss.takeDamage(bullet.getDamage());
-                        bullet.setDead(true);
-                        toRemove.add(bullet);
+            // Sử dụng bounding box để kiểm tra va chạm
+            if (obj1.getBounds().intersects(obj2.getBounds())) {
+                // Xử lý va chạm giữa Bullet và Enemy
+                if ((obj1 instanceof Bullet && obj2 instanceof Enemy) || 
+                    (obj1 instanceof Enemy && obj2 instanceof Bullet)) {
+                    Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
+                    Enemy enemy = (Enemy) (obj1 instanceof Enemy ? obj1 : obj2);
 
-                        // Nếu boss chết, tăng điểm và đánh dấu boss không còn tồn tại
-                        if (boss.isDead()) {
-                            score += 50;
-                            bossExists = false;
-                            toRemove.add(boss);
-                        }
-                    } 
-                    // Kiểm tra nếu Player trúng đạn của Enemy hoặc BossEnemy
-                    else if (obj1 instanceof Player && obj2 instanceof EnemyBullet) {
-                        obj2.setDead(true);
-                        toRemove.add(obj2);
-                        numLives--;
+                    // Chỉ tạo hiệu ứng nổ nếu Enemy chưa chết
+                    if (!enemy.isDead()) {
+                        enemy.setDead(true); // Đánh dấu Enemy là "dead"
+                        bullet.setDead(true); // Đánh dấu Bullet là "dead"
+
+                        // Tạo hiệu ứng nổ tại vị trí Enemy
+                        gameObjects.add(new Explosion(enemy.getX(), enemy.getY()));
+
+                        // Tăng điểm
+                        score += 10;
                     }
-                    // Kiểm tra nếu Player thu thập PowerUp
-                    else if (obj1 instanceof Player && obj2 instanceof PowerUp) {
-                        obj2.setDead(true);
-                        toRemove.add(obj2);
+
+                    // Thêm Bullet và Enemy vào danh sách cần xóa
+                    toRemove.add(bullet);
+                    toRemove.add(enemy);
+                }
+
+                // Xử lý va chạm giữa Player và Enemy
+                else if (obj1 instanceof Player && obj2 instanceof Enemy) {
+                    Player player = (Player) obj1;
+                    Enemy enemy = (Enemy) obj2;
+
+                    // Đánh dấu Enemy là "dead"
+                    enemy.setDead(true);
+                    toRemove.add(enemy);
+
+                    // Giảm số mạng của Player
+                    numLives--;
+                }
+
+                // Xử lý va chạm giữa Bullet và BossEnemy
+                else if (obj1 instanceof Bullet && obj2 instanceof BossEnemy) {
+                    Bullet bullet = (Bullet) obj1;
+                    BossEnemy boss = (BossEnemy) obj2;
+
+                    // Gây sát thương cho Boss
+                    boss.takeDamage(bullet.getDamage());
+                    bullet.setDead(true); // Đánh dấu Bullet là "dead"
+                    toRemove.add(bullet);
+
+                    // Nếu Boss chết, tăng điểm và đánh dấu Boss không còn tồn tại
+                    if (boss.isDead()) {
+                        score += 50;
+                        bossExists = false;
+                        toRemove.add(boss);
+                    }
+                }
+
+                // Xử lý va chạm giữa Player và EnemyBullet
+                else if (obj1 instanceof Player && obj2 instanceof EnemyBullet) {
+                    Player player = (Player) obj1;
+                    EnemyBullet enemyBullet = (EnemyBullet) obj2;
+
+                    // Đánh dấu EnemyBullet là "dead"
+                    enemyBullet.setDead(true);
+                    toRemove.add(enemyBullet);
+
+                    // Giảm số mạng của Player
+                    numLives--;
+                }
+
+                // Xử lý va chạm giữa Player và PowerUp
+                else if (obj1 instanceof Player && obj2 instanceof PowerUp) {
+                    Player player = (Player) obj1;
+                    PowerUp powerUp = (PowerUp) obj2;
+
+                    // Đánh dấu PowerUp là "dead"
+                    powerUp.setDead(true);
+                    toRemove.add(powerUp);
 
                     // Random hóa hiệu ứng PowerUp
                     if (numLives < 4 && Math.random() < 0.5) {
                         numLives++; // Tăng mạng nếu chưa đạt tối đa
                         System.out.println("Extra life gained! Lives: " + numLives);
                     } else {
-                        player.activatePowerUp(8000); // Tăng số lượng đạn trong 10 giây
-                        System.out.println("PowerUp activated: Increased bullet count for 10 seconds!");
-                    }
+                        player.activatePowerUp(8000); // Tăng số lượng đạn trong 8 giây
+                        System.out.println("PowerUp activated: Increased bullet count for 8 seconds!");
                     }
                 }
             }
         }
-
-        // Loại bỏ các đối tượng đã đánh dấu là "dead"
-        gameObjects.removeAll(toRemove);
     }
+
+    // Loại bỏ các đối tượng đã đánh dấu là "dead"
+    gameObjects.removeAll(toRemove);
+}
 
     private void startGame(Stage primaryStage) {
         // Dừng game loop nếu đang chạy
