@@ -33,13 +33,19 @@ public class Player extends GameObject {
     private int blinkTimer; // Bộ đếm thời gian nhấp nháy
     private static final int BLINK_DURATION = 60; // Thời gian nhấp nháy (60 frame ~ 1 giây)
 
+    private Image playerImageLeft;
+    private Image playerImageRight;
+    private String moveDirection = "idle"; // "left", "right", "idle"
+    
     public Player(double x, double y) {
         super(x, y, WIDTH, HEIGHT);
         this.health = 3; // mặc định 3 mạng
         this.dead = false;
 
-        // Tải ảnh lên
+        // Tải ảnh cho từng hướng
         this.playerImage = new Image("player.png");
+        this.playerImageLeft = new Image("player_left.png");
+        this.playerImageRight = new Image("player_right.png");
 
         // Khởi tạo hiệu ứng nhấp nháy
         this.isBlinking = false;
@@ -49,13 +55,13 @@ public class Player extends GameObject {
 
     @Override
     public void update() {
-        // Nếu đang nhấp nháy, giảm thời gian nhấp nháy
+        // Xử lý hiệu ứng nhấp nháy
         if (isBlinking) {
             blinkTimer--;
-            blinkOpacity = (blinkTimer / 5 % 2 == 0) ? 0.5 : 1.0; // Nhấp nháy mờ đi
+            blinkOpacity = (blinkTimer / 5 % 2 == 0) ? 0.5 : 1.0;
             if (blinkTimer <= 0) {
-                isBlinking = false; // Kết thúc nhấp nháy
-                blinkOpacity = 1.0; // Trở lại trạng thái bình thường
+                isBlinking = false;
+                blinkOpacity = 1.0;
             }
         }
 
@@ -64,6 +70,15 @@ public class Player extends GameObject {
         if (moveRight) x += SPEED;
         if (moveForward) y -= SPEED;
         if (moveBackward) y += SPEED;
+
+        // Cập nhật hướng di chuyển để đổi sprite
+        if (moveLeft && !moveRight) {
+            moveDirection = "left";
+        } else if (moveRight && !moveLeft) {
+            moveDirection = "right";
+        } else {
+            moveDirection = "idle";
+        }
 
         // Giới hạn trong màn hình
         x = Math.max(0, Math.min(SpaceShooter.WIDTH - getWidth(), x));
@@ -82,16 +97,20 @@ public class Player extends GameObject {
 
     @Override
     public void render(GraphicsContext gc) {
-        gc.setGlobalAlpha(blinkOpacity); // Đặt độ trong suốt
-        if (playerImage != null) {
-            // Vẽ ảnh player từ góc trên bên trái
-            gc.drawImage(playerImage, x, y, WIDTH, HEIGHT);
+        gc.setGlobalAlpha(blinkOpacity);
+
+        // Chọn ảnh theo hướng di chuyển
+        Image img = playerImage;
+        if (moveDirection.equals("left")) img = playerImageLeft;
+        else if (moveDirection.equals("right")) img = playerImageRight;
+
+        if (img != null) {
+            gc.drawImage(img, x, y, WIDTH, HEIGHT);
         } else {
-            // Nếu không tải được ảnh, vẽ hình chữ nhật thay thế
             gc.setFill(Color.CYAN);
             gc.fillRect(x, y, WIDTH, HEIGHT);
         }
-        gc.setGlobalAlpha(1.0); // Khôi phục độ trong suốt bình thường
+        gc.setGlobalAlpha(1.0);
     }
 
     public void triggerBlink() {
