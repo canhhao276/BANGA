@@ -1,5 +1,7 @@
 package game;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -22,9 +24,8 @@ public class Player extends GameObject {
 
     private Image playerImage;
 
-    private int bulletCount = 1;
-    private long powerUpEndTime = 0; // Thời gian kết thúc hiệu lực PowerUp
-    private boolean powerUpActive = false; // Trạng thái PowerUp
+    private int bulletCount = 1; // Số lượng đạn mặc định
+    private List<Long> powerUpEndTimes = new ArrayList<>(); // Danh sách thời gian hết hạn của từng power-up
 
     // Hiệu ứng nhấp nháy
     private boolean isBlinking; // Trạng thái nhấp nháy
@@ -68,9 +69,14 @@ public class Player extends GameObject {
         x = Math.max(0, Math.min(SpaceShooter.WIDTH - getWidth(), x));
         y = Math.max(0, Math.min(SpaceShooter.HEIGHT - getHeight(), y));
 
-        // Kiểm tra nếu PowerUp hết hiệu lực
-        if (powerUpActive && System.currentTimeMillis() > powerUpEndTime) {
-            deactivatePowerUp(); // Hủy hiệu ứng PowerUp
+        // Kiểm tra và loại bỏ các power-up đã hết hạn
+        long currentTime = System.currentTimeMillis();
+        Iterator<Long> iterator = powerUpEndTimes.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next() <= currentTime) {
+                iterator.remove(); // Loại bỏ power-up đã hết hạn
+                bulletCount = Math.max(1, bulletCount - 1); // Giảm số lượng đạn
+            }
         }
     }
 
@@ -94,14 +100,8 @@ public class Player extends GameObject {
     }
 
     public void activatePowerUp(long duration) {
-        powerUpActive = true; // Kích hoạt PowerUp
-        powerUpEndTime = System.currentTimeMillis() + duration; // Đặt thời gian kết thúc hiệu lực
+        powerUpEndTimes.add(System.currentTimeMillis() + 12_000); // Thêm thời gian hết hạn mới
         bulletCount++; // Tăng số lượng đạn bắn
-    }
-
-    private void deactivatePowerUp() {
-        powerUpActive = false; // Hủy kích hoạt PowerUp
-        bulletCount = Math.max(1, bulletCount - 1); // Giảm số lượng đạn bắn về mặc định
     }
 
     public void setMoveLeft(boolean moveLeft) {
@@ -139,7 +139,6 @@ public class Player extends GameObject {
     }
 
     public void setX(double i) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setX'");
     }
 }

@@ -314,9 +314,9 @@ private void showInstructions(Stage primaryStage) {
 
         // Sinh thêm kẻ địch, boss, và power-up
         spawnEnemy();
-        if (score >= lastBossSpawnScore + 400 && !bossExists) { // Kiểm tra nếu đạt mốc 400 điểm kế tiếp
+        if (score >= lastBossSpawnScore + 250 && !bossExists) {
             spawnBossEnemy();
-            lastBossSpawnScore += 400; // Cập nhật mốc điểm tiếp theo
+            lastBossSpawnScore += 250; // Cập nhật mốc điểm tiếp theo
         }
 
         // Cập nhật UI
@@ -363,7 +363,7 @@ private void showInstructions(Stage primaryStage) {
 
     private void spawnEnemy() {
         // Tăng xác suất xuất hiện kẻ địch dựa trên điểm số
-        double baseProbability = 0.004; // Xác suất cơ bản
+        double baseProbability = 0.007; // Xác suất cơ bản
         double difficultyMultiplier = 1 + (score / 400) * 0.4; // Tăng độ khó mỗi 500 điểm
         double spawnProbability = baseProbability * difficultyMultiplier;
 
@@ -408,7 +408,7 @@ private void checkCollisions() {
                         score += 10;
 
                         // Random tỷ lệ xuất hiện PowerUp
-                        double dropChance = 0.2; // 20% tỷ lệ xuất hiện PowerUp
+                        double dropChance = 0.1; // 10% tỷ lệ xuất hiện PowerUp
                         if (Math.random() < dropChance) {
                             double powerUpX = enemy.getX();
                             double powerUpY = enemy.getY();
@@ -446,21 +446,16 @@ private void checkCollisions() {
                 }
 
                 // Xử lý va chạm giữa Bullet và BossEnemy
-                else if (obj1 instanceof Bullet && obj2 instanceof BossEnemy) {
-                    Bullet bullet = (Bullet) obj1;
-                    BossEnemy boss = (BossEnemy) obj2;
+                else if ((obj1 instanceof Bullet && obj2 instanceof BossEnemy) || 
+                         (obj1 instanceof BossEnemy && obj2 instanceof Bullet)) {
+                    Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
+                    BossEnemy boss = (BossEnemy) (obj1 instanceof BossEnemy ? obj1 : obj2);
 
-                    // Gây sát thương cho Boss
+                    // Gọi phương thức takeDamage của BossEnemy
                     boss.takeDamage(bullet.getDamage());
-                    bullet.setDead(true); // Đánh dấu Bullet là "dead"
-                    toRemove.add(bullet);
 
-                    // Nếu Boss chết, tăng điểm và đánh dấu Boss không còn tồn tại
-                    if (boss.isDead()) {
-                        score += 50;
-                        bossExists = false;
-                        toRemove.add(boss);
-                    }
+                    // Đánh dấu đạn là "dead" sau khi va chạm
+                    bullet.setDead(true);
                 }
 
                 // Xử lý va chạm giữa Player và EnemyBullet

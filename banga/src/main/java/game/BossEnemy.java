@@ -1,16 +1,18 @@
 package game;
 
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
-import javafx.scene.image.Image;
-
 import java.util.List;
+
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public class BossEnemy extends Enemy {
 
-    private static final double SHOOT_PROBABILITY = 0.01;
+    private static final double SHOOT_PROBABILITY = 0.005;
 
     private int health;
+    private int hitCount = 0; // Số lần boss bị trúng đạn
+    private static final int MAX_HITS = 3; // Số lần trúng đạn để boss chết
 
     private static final int WIDTH = 60;
     static final int HEIGHT = 60;
@@ -73,17 +75,27 @@ public class BossEnemy extends Enemy {
     }
 
     public void takeDamage(int damage) {
-        health -= damage; // Trừ máu theo lượng sát thương
-        if (health <= 0) {
-            setDead(true);
+        hitCount++; // Tăng số lần boss bị trúng đạn
+        System.out.println("Boss bị trúng đạn! Số lần trúng: " + hitCount); // Debug để kiểm tra số lần trúng đạn
+
+        if (hitCount >= MAX_HITS) {
+            setDead(true); // Boss chỉ chết khi bị trúng đạn đủ 3 lần
+            System.out.println("Boss đã chết!");
         }
     }
 
     public void shoot(List<GameObject> newObjects) {
-        // Bắn 3 viên đạn cùng lúc
+        // Bắn 1 viên đạn ở giữa
         newObjects.add(new EnemyBullet(x, y + HEIGHT / 2));
-        newObjects.add(new EnemyBullet(x - 10, y + HEIGHT / 2));
-        newObjects.add(new EnemyBullet(x + 10, y + HEIGHT / 2));
+        
+        // Bắn 2 viên đạn tỏa ra 2 bên
+        EnemyBullet leftBullet = new EnemyBullet(x - 10, y + HEIGHT / 2);
+        leftBullet.setDirection(-0.5, 2); // Đạn bên trái bay chéo sang trái
+        newObjects.add(leftBullet);
+
+        EnemyBullet rightBullet = new EnemyBullet(x + 10, y + HEIGHT / 2);
+        rightBullet.setDirection(0.5, 2); // Đạn bên phải bay chéo sang phải
+        newObjects.add(rightBullet);
     }
 
     @Override

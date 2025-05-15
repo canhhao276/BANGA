@@ -10,6 +10,9 @@ public class EnemyBullet extends GameObject {
 
     private static final double SPEED = 3;
 
+    private double dx = 0; // Hướng di chuyển theo trục X
+    private double dy = SPEED; // Hướng di chuyển theo trục Y (mặc định là xuống dưới)
+
     private boolean dead;
 
     public EnemyBullet(double x, double y) {
@@ -17,12 +20,18 @@ public class EnemyBullet extends GameObject {
         this.dead = false;
     }
 
+    public void setDirection(double dx, double dy) {
+        this.dx = dx;
+        this.dy = dy;
+    }
+
     @Override
     public void update() {
-        y += SPEED; // Di chuyển viên đạn xuống dưới
+        x += dx; // Cập nhật vị trí theo trục X
+        y += dy; // Cập nhật vị trí theo trục Y
 
         // Kiểm tra nếu viên đạn ra khỏi khung hình
-        if (y > SpaceShooter.HEIGHT) {
+        if (y > SpaceShooter.HEIGHT || x < 0 || x > SpaceShooter.WIDTH) {
             setDead(true); // Đánh dấu viên đạn là "dead"
         }
     }
