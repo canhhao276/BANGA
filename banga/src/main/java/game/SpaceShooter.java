@@ -48,8 +48,8 @@ public class SpaceShooter extends Application {
 
     private int lastBossSpawnScore = 0;
 
-    private  long lastShootTime = 0; // Thời gian lần bắn cuối cùng(sua)
-    private  static final long SHOOT_DELAY = 200_000_000; // 300ms(đơn vị: nanoseconds)(sua)
+    private long lastShootTime = 0; // Thời gian lần bắn cuối cùng(sua)
+    private static final long SHOOT_DELAY = 200_000_000; // 300ms(đơn vị: nanoseconds)(sua)
     private boolean isShooting = false; // Biến theo dõi trạng thái bắn(sua)
 
     private double backgroundY = 0; // Vị trí Y của ảnh nền
@@ -57,8 +57,10 @@ public class SpaceShooter extends Application {
 
     private ScrollingBackground scrollingBackground;
 
+    private double mouseX = -1, mouseY = -1; // Thêm biến lưu vị trí chuột
+
     public static List<GameObject> getGameObjects() {
-    return gameObjects;
+        return gameObjects;
     }
 
     public static void main(String[] args) {
@@ -76,108 +78,160 @@ public class SpaceShooter extends Application {
         showMainMenu(primaryStage);
     }
 
-private void showMainMenu(Stage primaryStage) {
-    Pane rootStart = new Pane();
-    Canvas canvas = new Canvas(WIDTH, HEIGHT);
-    GraphicsContext gc = canvas.getGraphicsContext2D();
-    rootStart.getChildren().add(canvas);
+    private void showMainMenu(Stage primaryStage) {
+        Pane rootStart = new Pane();
+        Canvas canvas = new Canvas(WIDTH, HEIGHT);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        rootStart.getChildren().add(canvas);
 
-    // Tạo AnimationTimer để cập nhật và vẽ background động
-    AnimationTimer menuLoop = new AnimationTimer() {
-        @Override
-        public void handle(long now) {
-            scrollingBackground.update(); // Cập nhật vị trí background
-            scrollingBackground.render(gc); // Vẽ background
+        // Lưu thông tin các nút để xử lý hover và click
+        class MenuButton {
+            String label;
+            double x, y, width, height;
 
-            // Vẽ giao diện màn hình chính
-            gc.setFill(Color.CYAN); // Đặt màu chữ là xanh dương nhạt
-            gc.setFont(Font.font("Arial", 40)); // Đặt phông chữ lớn hơn
+            MenuButton(String label, double x, double y, double width, double height) {
+                this.label = label;
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
 
-            // Vẽ tiêu đề
-            gc.fillText("Space Shooter", WIDTH / 2 - 150, HEIGHT / 2 - 150);
-
-            // Vẽ các nút
-            gc.setFont(Font.font("Arial", 30)); // Đặt phông chữ nhỏ hơn cho các nút
-            gc.fillText("START", WIDTH / 2 - 60, HEIGHT / 2 - 50);
-            gc.fillText("INSTRUCTIONS", WIDTH / 2 - 120, HEIGHT / 2);
-            gc.fillText("QUIT", WIDTH / 2 - 40, HEIGHT / 2 + 50);
+            boolean isHovered(double mx, double my) {
+                return mx >= x && mx <= x + width && my >= y && my <= y + height;
+            }
         }
-    };
-    menuLoop.start();
 
-    Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
-    primaryStage.setScene(startScene);
+        double btnWidth = 260, btnHeight = 50, arc = 25;
+        double startY = HEIGHT / 2 - 70;
+        MenuButton[] buttons = {
+            new MenuButton("START", WIDTH / 2 - btnWidth / 2, startY, btnWidth, btnHeight),
+            new MenuButton("INSTRUCTIONS", WIDTH / 2 - btnWidth / 2, startY + 70, btnWidth, btnHeight),
+            new MenuButton("QUIT", WIDTH / 2 - btnWidth / 2, startY + 140, btnWidth, btnHeight)
+        };
 
-    // Xử lý sự kiện chuột cho các nút
-    startScene.setOnMouseClicked(event -> {
-        double x = event.getX();
-        double y = event.getY();
+        // Bắt sự kiện di chuyển chuột để cập nhật mouseX, mouseY
+        canvas.setOnMouseMoved(e -> {
+            mouseX = e.getX();
+            mouseY = e.getY();
+        });
 
-        // Kiểm tra vị trí nhấp chuột để xử lý các nút
-        if (x >= WIDTH / 2 - 60 && x <= WIDTH / 2 + 60 && y >= HEIGHT / 2 - 70 && y <= HEIGHT / 2 - 30) {
-            menuLoop.stop();
-            resetGame();
-            startGame(primaryStage);
-        } else if (x >= WIDTH / 2 - 120 && x <= WIDTH / 2 + 120 && y >= HEIGHT / 2 - 10 && y <= HEIGHT / 2 + 30) {
-            menuLoop.stop();
-            showInstructions(primaryStage);
-        } else if (x >= WIDTH / 2 - 40 && x <= WIDTH / 2 + 40 && y >= HEIGHT / 2 + 30 && y <= HEIGHT / 2 + 70) {
-            primaryStage.close();
-        }
-    });
+        // Tạo AnimationTimer để cập nhật và vẽ background động + menu
+        AnimationTimer menuLoop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                scrollingBackground.update();
+                scrollingBackground.render(gc);
 
-    primaryStage.show();
-}
+                // Vẽ tiêu đề
+                gc.setFill(Color.CYAN);
+                gc.setFont(Font.font("Impact", 64)); // Đổi sang Impact, size lớn
+                gc.fillText("Space Shooter", WIDTH / 2 - 185, HEIGHT / 2 - 150);
 
-private void showInstructions(Stage primaryStage) {
-    Pane rootInstructions = new Pane();
-    Canvas canvas = new Canvas(WIDTH, HEIGHT);
-    GraphicsContext gc = canvas.getGraphicsContext2D();
-    rootInstructions.getChildren().add(canvas);
+                // Vẽ các nút với hiệu ứng hover
+                for (int i = 0; i < buttons.length; i++) {
+                    MenuButton btn = buttons[i];
+                    boolean hovered = btn.isHovered(mouseX, mouseY);
+                    double scale = hovered ? 0.93 : 1.0;
+                    double w = btn.width * scale;
+                    double h = btn.height * scale;
+                    double x = btn.x + (btn.width - w) / 2;
+                    double y = btn.y + (btn.height - h) / 2;
 
-    // Tạo AnimationTimer để cập nhật và vẽ background động
-    AnimationTimer instructionsLoop = new AnimationTimer() {
-        @Override
-        public void handle(long now) {
-            scrollingBackground.update(); // Cập nhật vị trí background
-            scrollingBackground.render(gc); // Vẽ background
+                    // Đổi màu nền từng nút
+                    Color bgColor;
+                    switch (i) {
+                        case 0: bgColor = Color.rgb(0, 180, 80, 0.85); break;        // START: xanh lá
+                        case 1: bgColor = Color.rgb(255, 140, 0, 0.85); break;       // INSTRUCTIONS: cam
+                        case 2: bgColor = Color.rgb(200, 40, 40, 0.85); break;       // QUIT: đỏ
+                        default: bgColor = Color.rgb(30, 30, 30, 0.8);
+                    }
+                    gc.setFill(bgColor);
+                    gc.fillRoundRect(x, y, w, h, arc, arc);
 
-            // Vẽ nội dung hướng dẫn
-            gc.setFill(Color.CYAN); // Đặt màu chữ là xanh dương nhạt
-            gc.setFont(Font.font("Arial", 25)); // Đặt font chữ lớn hơn
-            gc.fillText("Use the arrow keys to move your spaceship.", 50, 200);
-            gc.fillText("Press SPACE to shoot bullets.", 50, 250);
-            gc.fillText("Avoid enemies and collect power-ups.", 50, 300);
-        }
-    };
-    instructionsLoop.start();
+                    // Vẽ chữ căn giữa với Impact cho tất cả nút
+                    gc.setFill(Color.CYAN);
+                    gc.setFont(Font.font("Impact", 32));
+                    javafx.scene.text.Text tempText = new javafx.scene.text.Text(btn.label);
+                    tempText.setFont(gc.getFont());
+                    double textWidth = tempText.getLayoutBounds().getWidth();
+                    gc.fillText(btn.label, WIDTH / 2 - textWidth / 2, y + h / 2 + 11);
+                }
+            }
+        };
+        menuLoop.start();
 
-    // Thêm nút "Back" để quay lại màn hình chính
-    Button backButton = new Button("Back");
-    backButton.setFont(Font.font("Arial", 30)); // Tăng kích thước font chữ
-    backButton.setStyle("-fx-background-color: gray; -fx-text-fill: white;");
-    backButton.setLayoutX(WIDTH / 2 - 50); // Đặt nút ở giữa màn hình
-    backButton.setLayoutY(HEIGHT - 200); // Đưa nút lên trên một chút
-    backButton.setOnAction(e -> {
-        instructionsLoop.stop(); // Dừng vòng lặp nền động
-        showMainMenu(primaryStage); // Quay lại màn hình chính
-    });
+        Scene startScene = new Scene(rootStart, WIDTH, HEIGHT);
+        primaryStage.setScene(startScene);
 
-    rootInstructions.getChildren().add(backButton);
+        // Xử lý sự kiện chuột cho các nút
+        startScene.setOnMouseClicked(event -> {
+            double x = event.getX();
+            double y = event.getY();
+            if (buttons[0].isHovered(x, y)) {
+                menuLoop.stop();
+                resetGame();
+                startGame(primaryStage);
+            } else if (buttons[1].isHovered(x, y)) {
+                menuLoop.stop();
+                showInstructions(primaryStage);
+            } else if (buttons[2].isHovered(x, y)) {
+                primaryStage.close();
+            }
+        });
 
-    Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
-    primaryStage.setScene(instructionsScene);
+        primaryStage.show();
+    }
 
-    // Xử lý sự kiện quay lại màn hình chính bằng phím BACK_SPACE
-    instructionsScene.setOnKeyPressed(event -> {
-        if (event.getCode().toString().equals("BACK_SPACE")) {
-            instructionsLoop.stop();
-            showMainMenu(primaryStage);
-        }
-    });
+    private void showInstructions(Stage primaryStage) {
+        Pane rootInstructions = new Pane();
+        Canvas canvas = new Canvas(WIDTH, HEIGHT);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        rootInstructions.getChildren().add(canvas);
 
-    primaryStage.show();
-}
+        // Tạo AnimationTimer để cập nhật và vẽ background động
+        AnimationTimer instructionsLoop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                scrollingBackground.update(); // Cập nhật vị trí background
+                scrollingBackground.render(gc); // Vẽ background
+
+                // Vẽ nội dung hướng dẫn
+                gc.setFill(Color.CYAN); // Đặt màu chữ là xanh dương nhạt
+                gc.setFont(Font.font("Arial", 25)); // Đặt font chữ lớn hơn
+                gc.fillText("Use the arrow keys to move your spaceship.", 50, 200);
+                gc.fillText("Press SPACE to shoot bullets.", 50, 250);
+                gc.fillText("Avoid enemies and collect power-ups.", 50, 300);
+            }
+        };
+        instructionsLoop.start();
+
+        // Thêm nút "Back" để quay lại màn hình chính
+        Button backButton = new Button("Back");
+        backButton.setFont(Font.font("Arial", 30)); // Tăng kích thước font chữ
+        backButton.setStyle("-fx-background-color: gray; -fx-text-fill: white;");
+        backButton.setLayoutX(WIDTH / 2 - 50); // Đặt nút ở giữa màn hình
+        backButton.setLayoutY(HEIGHT - 200); // Đưa nút lên trên một chút
+        backButton.setOnAction(e -> {
+            instructionsLoop.stop(); // Dừng vòng lặp nền động
+            showMainMenu(primaryStage); // Quay lại màn hình chính
+        });
+
+        rootInstructions.getChildren().add(backButton);
+
+        Scene instructionsScene = new Scene(rootInstructions, WIDTH, HEIGHT);
+        primaryStage.setScene(instructionsScene);
+
+        // Xử lý sự kiện quay lại màn hình chính bằng phím BACK_SPACE
+        instructionsScene.setOnKeyPressed(event -> {
+            if (event.getCode().toString().equals("BACK_SPACE")) {
+                instructionsLoop.stop();
+                showMainMenu(primaryStage);
+            }
+        });
+
+        primaryStage.show();
+    }
 
     private void showStartScreen(Stage primaryStage) {
         VBox rootStart = new VBox(20);
@@ -232,23 +286,39 @@ private void showInstructions(Stage primaryStage) {
     private void initEventHandlers() {
         scene.setOnKeyPressed(event -> {
             switch (event.getCode()) {
-                case LEFT : player.setMoveLeft(true); break;
-                case RIGHT : player.setMoveRight(true); break;
-                case UP : player.setMoveForward(true); break;
-                case DOWN : player.setMoveBackward(true); break;
-                case SPACE : 
+                case LEFT:
+                    player.setMoveLeft(true);
+                    break;
+                case RIGHT:
+                    player.setMoveRight(true);
+                    break;
+                case UP:
+                    player.setMoveForward(true);
+                    break;
+                case DOWN:
+                    player.setMoveBackward(true);
+                    break;
+                case SPACE:
                     isShooting = true; // Bắt đầu bắn
-                break;
+                    break;
             }
         });
 
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
-                case LEFT : player.setMoveLeft(false); break;
-                case RIGHT : player.setMoveRight(false); break;
-                case UP : player.setMoveForward(false); break;
-                case DOWN : player.setMoveBackward(false); break;
-                case SPACE :
+                case LEFT:
+                    player.setMoveLeft(false);
+                    break;
+                case RIGHT:
+                    player.setMoveRight(false);
+                    break;
+                case UP:
+                    player.setMoveForward(false);
+                    break;
+                case DOWN:
+                    player.setMoveBackward(false);
+                    break;
+                case SPACE:
                     isShooting = false; // Ngừng bắn
             }
         });
@@ -359,8 +429,6 @@ private void showInstructions(Stage primaryStage) {
         }
     }
 
-
-
     private void spawnEnemy() {
         // Tăng xác suất xuất hiện kẻ địch dựa trên điểm số
         double baseProbability = 0.007; // Xác suất cơ bản
@@ -377,139 +445,139 @@ private void showInstructions(Stage primaryStage) {
         bossExists = true;
         gameObjects.add(new BossEnemy(WIDTH / 2, -BossEnemy.HEIGHT / 2));
     }
-    
-private void checkCollisions() {
-    // Tạo danh sách tạm thời để lưu các đối tượng cần đánh dấu là "dead"
-    List<GameObject> toRemove = new ArrayList<>();
 
-    for (int i = 0; i < gameObjects.size(); i++) {
-        GameObject obj1 = gameObjects.get(i);
+    private void checkCollisions() {
+        // Tạo danh sách tạm thời để lưu các đối tượng cần đánh dấu là "dead"
+        List<GameObject> toRemove = new ArrayList<>();
 
-        for (int j = i + 1; j < gameObjects.size(); j++) {
-            GameObject obj2 = gameObjects.get(j);
+        for (int i = 0; i < gameObjects.size(); i++) {
+            GameObject obj1 = gameObjects.get(i);
 
-            // Sử dụng bounding box để kiểm tra va chạm
-            if (obj1.getBounds().intersects(obj2.getBounds())) {
-                // Xử lý va chạm giữa Bullet và Enemy
-                if ((obj1 instanceof Bullet && obj2 instanceof Enemy) || 
-                    (obj1 instanceof Enemy && obj2 instanceof Bullet)) {
-                    Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
-                    Enemy enemy = (Enemy) (obj1 instanceof Enemy ? obj1 : obj2);
+            for (int j = i + 1; j < gameObjects.size(); j++) {
+                GameObject obj2 = gameObjects.get(j);
 
-                    // Chỉ tạo hiệu ứng nổ nếu Enemy chưa chết
-                    if (!enemy.isDead()) {
-                        enemy.setDead(true); // Đánh dấu Enemy là "dead"
-                        bullet.setDead(true); // Đánh dấu Bullet là "dead"
+                // Sử dụng bounding box để kiểm tra va chạm
+                if (obj1.getBounds().intersects(obj2.getBounds())) {
+                    // Xử lý va chạm giữa Bullet và Enemy
+                    if ((obj1 instanceof Bullet && obj2 instanceof Enemy) ||
+                        (obj1 instanceof Enemy && obj2 instanceof Bullet)) {
+                        Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
+                        Enemy enemy = (Enemy) (obj1 instanceof Enemy ? obj1 : obj2);
 
-                        // Tạo hiệu ứng nổ tại vị trí Enemy
-                        gameObjects.add(new Explosion(enemy.getX(), enemy.getY()));
+                        // Chỉ tạo hiệu ứng nổ nếu Enemy chưa chết
+                        if (!enemy.isDead()) {
+                            enemy.setDead(true); // Đánh dấu Enemy là "dead"
+                            bullet.setDead(true); // Đánh dấu Bullet là "dead"
 
-                        // Tăng điểm
-                        score += 10;
+                            // Tạo hiệu ứng nổ tại vị trí Enemy
+                            gameObjects.add(new Explosion(enemy.getX(), enemy.getY()));
 
-                        // Random tỷ lệ xuất hiện PowerUp
-                        double dropChance = 0.1; // 10% tỷ lệ xuất hiện PowerUp
-                        if (Math.random() < dropChance) {
-                            double powerUpX = enemy.getX();
-                            double powerUpY = enemy.getY();
-                            gameObjects.add(new PowerUp(powerUpX, powerUpY)); // Tạo PowerUp tại vị trí Enemy
+                            // Tăng điểm
+                            score += 10;
+
+                            // Random tỷ lệ xuất hiện PowerUp
+                            double dropChance = 0.1; // 10% tỷ lệ xuất hiện PowerUp
+                            if (Math.random() < dropChance) {
+                                double powerUpX = enemy.getX();
+                                double powerUpY = enemy.getY();
+                                gameObjects.add(new PowerUp(powerUpX, powerUpY)); // Tạo PowerUp tại vị trí Enemy
+                            }
+                        }
+
+                        // Thêm Bullet và Enemy vào danh sách cần xóa
+                        toRemove.add(bullet);
+                        toRemove.add(enemy);
+                    }
+
+                    // Xử lý va chạm giữa Player và Enemy
+                    else if (obj1 instanceof Player && obj2 instanceof Enemy) {
+                        Player player = (Player) obj1;
+                        Enemy enemy = (Enemy) obj2;
+
+                        // Đánh dấu Enemy là "dead"
+                        enemy.setDead(true);
+                        toRemove.add(enemy);
+
+                        // Giảm số mạng của Player
+                        numLives--;
+
+                        // Kích hoạt hiệu ứng nhấp nháy cho Player
+                        player.triggerBlink();
+
+                        // Kiểm tra nếu số mạng giảm xuống 0
+                        if (numLives <= 0) {
+                            gameRunning = false; // Kết thúc trò chơi
+                            System.out.println("Game Over! Returning to game over screen...");
+                            showGameOverScreen((Stage) root.getScene().getWindow());
+                            return;
                         }
                     }
 
-                    // Thêm Bullet và Enemy vào danh sách cần xóa
-                    toRemove.add(bullet);
-                    toRemove.add(enemy);
-                }
+                    // Xử lý va chạm giữa Bullet và BossEnemy
+                    else if ((obj1 instanceof Bullet && obj2 instanceof BossEnemy) ||
+                             (obj1 instanceof BossEnemy && obj2 instanceof Bullet)) {
+                        Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
+                        BossEnemy boss = (BossEnemy) (obj1 instanceof BossEnemy ? obj1 : obj2);
 
-                // Xử lý va chạm giữa Player và Enemy
-                else if (obj1 instanceof Player && obj2 instanceof Enemy) {
-                    Player player = (Player) obj1;
-                    Enemy enemy = (Enemy) obj2;
+                        // Gọi phương thức takeDamage của BossEnemy
+                        boss.takeDamage(bullet.getDamage());
 
-                    // Đánh dấu Enemy là "dead"
-                    enemy.setDead(true);
-                    toRemove.add(enemy);
-
-                    // Giảm số mạng của Player
-                    numLives--;
-
-                    // Kích hoạt hiệu ứng nhấp nháy cho Player
-                    player.triggerBlink();
-
-                    // Kiểm tra nếu số mạng giảm xuống 0
-                    if (numLives <= 0) {
-                        gameRunning = false; // Kết thúc trò chơi
-                        System.out.println("Game Over! Returning to game over screen...");
-                        showGameOverScreen((Stage) root.getScene().getWindow());
-                        return;
+                        // Đánh dấu đạn là "dead" sau khi va chạm
+                        bullet.setDead(true);
                     }
-                }
 
-                // Xử lý va chạm giữa Bullet và BossEnemy
-                else if ((obj1 instanceof Bullet && obj2 instanceof BossEnemy) || 
-                         (obj1 instanceof BossEnemy && obj2 instanceof Bullet)) {
-                    Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
-                    BossEnemy boss = (BossEnemy) (obj1 instanceof BossEnemy ? obj1 : obj2);
+                    // Xử lý va chạm giữa Player và EnemyBullet
+                    else if (obj1 instanceof Player && obj2 instanceof EnemyBullet) {
+                        Player player = (Player) obj1;
+                        EnemyBullet enemyBullet = (EnemyBullet) obj2;
 
-                    // Gọi phương thức takeDamage của BossEnemy
-                    boss.takeDamage(bullet.getDamage());
+                        // Đánh dấu EnemyBullet là "dead"
+                        enemyBullet.setDead(true);
+                        toRemove.add(enemyBullet);
 
-                    // Đánh dấu đạn là "dead" sau khi va chạm
-                    bullet.setDead(true);
-                }
+                        // Giảm số mạng của Player
+                        numLives--;
 
-                // Xử lý va chạm giữa Player và EnemyBullet
-                else if (obj1 instanceof Player && obj2 instanceof EnemyBullet) {
-                    Player player = (Player) obj1;
-                    EnemyBullet enemyBullet = (EnemyBullet) obj2;
+                        // Kích hoạt hiệu ứng nhấp nháy cho Player
+                        player.triggerBlink();
 
-                    // Đánh dấu EnemyBullet là "dead"
-                    enemyBullet.setDead(true);
-                    toRemove.add(enemyBullet);
-
-                    // Giảm số mạng của Player
-                    numLives--;
-
-                    // Kích hoạt hiệu ứng nhấp nháy cho Player
-                    player.triggerBlink();
-
-                    // Kiểm tra nếu số mạng giảm xuống 0
-                    if (numLives <= 0) {
-                        gameRunning = false; // Kết thúc trò chơi
-                        System.out.println("Game Over! Returning to game over screen...");
-                        showGameOverScreen((Stage) root.getScene().getWindow());
-                        return;
+                        // Kiểm tra nếu số mạng giảm xuống 0
+                        if (numLives <= 0) {
+                            gameRunning = false; // Kết thúc trò chơi
+                            System.out.println("Game Over! Returning to game over screen...");
+                            showGameOverScreen((Stage) root.getScene().getWindow());
+                            return;
+                        }
                     }
-                }
 
-                // Xử lý va chạm giữa Player và PowerUp
-                else if (obj1 instanceof Player && obj2 instanceof PowerUp) {
-                    Player player = (Player) obj1;
-                    PowerUp powerUp = (PowerUp) obj2;
+                    // Xử lý va chạm giữa Player và PowerUp
+                    else if (obj1 instanceof Player && obj2 instanceof PowerUp) {
+                        Player player = (Player) obj1;
+                        PowerUp powerUp = (PowerUp) obj2;
 
-                    // Đánh dấu PowerUp là "dead"
-                    powerUp.setDead(true);
-                    toRemove.add(powerUp);
+                        // Đánh dấu PowerUp là "dead"
+                        powerUp.setDead(true);
+                        toRemove.add(powerUp);
 
-                    // Tạo hiệu ứng động tại vị trí PowerUp
-                    gameObjects.add(new PowerUpEffect(powerUp.getX(), powerUp.getY()));
+                        // Tạo hiệu ứng động tại vị trí PowerUp
+                        gameObjects.add(new PowerUpEffect(powerUp.getX(), powerUp.getY()));
 
-                    // Random hóa hiệu ứng PowerUp
-                    if (numLives < 4 && Math.random() < 0.5) {
-                        numLives++; // Tăng mạng nếu chưa đạt tối đa
-                        System.out.println("Extra life gained! Lives: " + numLives);
-                    } else {
-                        player.activatePowerUp(8000); // Tăng số lượng đạn trong 8 giây
-                        System.out.println("PowerUp activated: Increased bullet count for 8 seconds!");
+                        // Random hóa hiệu ứng PowerUp
+                        if (numLives < 4 && Math.random() < 0.5) {
+                            numLives++; // Tăng mạng nếu chưa đạt tối đa
+                            System.out.println("Extra life gained! Lives: " + numLives);
+                        } else {
+                            player.activatePowerUp(8000); // Tăng số lượng đạn trong 8 giây
+                            System.out.println("PowerUp activated: Increased bullet count for 8 seconds!");
+                        }
                     }
                 }
             }
         }
-    }
 
-    // Loại bỏ các đối tượng đã đánh dấu là "dead"
-    gameObjects.removeAll(toRemove);
-}
+        // Loại bỏ các đối tượng đã đánh dấu là "dead"
+        gameObjects.removeAll(toRemove);
+    }
 
     private void startGame(Stage primaryStage) {
         // Dừng game loop nếu đang chạy
