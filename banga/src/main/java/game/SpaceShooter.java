@@ -126,7 +126,7 @@ public class SpaceShooter extends Application {
                 // Vẽ tiêu đề
                 gc.setFill(Color.CYAN);
                 gc.setFont(Font.font("Impact", 64)); // Đổi sang Impact, size lớn
-                gc.fillText("Space Shooter", WIDTH / 2 - 185, HEIGHT / 2 - 150);
+                gc.fillText("Space Shooter🚀", WIDTH / 2 - 210, HEIGHT / 2 - 150);
 
                 // Vẽ các nút với hiệu ứng hover
                 for (int i = 0; i < buttons.length; i++) {
