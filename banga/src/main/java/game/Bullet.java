@@ -1,12 +1,15 @@
 package game;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
 
 public class Bullet extends GameObject {
 
-    public static final int WIDTH = 4;
-    public static final int HEIGHT = 15;
+    public static final int WIDTH = 10;
+    public static final int HEIGHT = 25;
+    private static Image bulletImage = new Image("Bullet.png"); // Đảm bảo đường dẫn đúng
 
     private static final double SPEED = 6;
 
@@ -36,8 +39,12 @@ public class Bullet extends GameObject {
 
     @Override
     public void render(GraphicsContext gc) {
-        gc.setFill(Color.YELLOW);
-        gc.fillRect(x - WIDTH / 2, y - HEIGHT / 2, WIDTH, HEIGHT);
+        if (bulletImage != null) {
+            gc.drawImage(bulletImage, x, y, WIDTH, HEIGHT);
+        } else {
+            gc.setFill(Color.YELLOW);
+            gc.fillRect(x, y, WIDTH, HEIGHT);
+        }
     }
 
     @Override

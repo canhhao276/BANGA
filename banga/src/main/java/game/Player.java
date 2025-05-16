@@ -139,14 +139,15 @@ public class Player extends GameObject {
         this.moveBackward = moveBackward;
     }
 
-    public void shoot(List<GameObject> gameObjects) {
-        for (int i = 0; i < bulletCount; i++) {
-            double offset = (i - (bulletCount - 1) / 2.0) * 10; // Tính toán vị trí đạn lệch
-            double bulletX = x + getWidth() / 2 + offset; // Tọa độ X (điều chỉnh không trừ 5)
-            double bulletY = y; // Tọa độ Y của viên đạn (phía trên Player)
-            gameObjects.add(new Bullet(bulletX, bulletY, 1)); // Thêm tham số damage (ví dụ: 1)
-        }
+public void shoot(List<GameObject> gameObjects) {
+    for (int i = 0; i < bulletCount; i++) {
+        double offset = (i - (bulletCount - 1) / 2.0) * 10;
+        // Căn giữa viên đạn theo chiều ngang của Player
+        double bulletX = x + (getWidth() - Bullet.WIDTH) / 2 + offset;
+        double bulletY = y;
+        gameObjects.add(new Bullet(bulletX, bulletY, 1));
     }
+}
 
     public void setDead(boolean dead) {
         this.dead = dead;
