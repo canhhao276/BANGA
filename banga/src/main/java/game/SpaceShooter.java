@@ -382,6 +382,16 @@ public class SpaceShooter extends Application {
         // Loại bỏ các đối tượng "dead"
         gameObjects.removeIf(GameObject::isDead);
 
+        // Kiểm tra sự tồn tại của boss sau khi loại bỏ các đối tượng "dead"
+        boolean bossStillExists = false;
+        for (GameObject obj : gameObjects) {
+            if (obj instanceof BossEnemy && !obj.isDead()) {
+                bossStillExists = true;
+                break;
+            }
+        }
+        bossExists = bossStillExists;
+
         // Sinh thêm kẻ địch, boss, và power-up
         spawnEnemy();
         if (score >= lastBossSpawnScore + 250 && !bossExists) {
@@ -431,7 +441,7 @@ public class SpaceShooter extends Application {
 
     private void spawnEnemy() {
         // Tăng xác suất xuất hiện kẻ địch dựa trên điểm số
-        double baseProbability = 0.007; // Xác suất cơ bản
+        double baseProbability = 0.008; // Xác suất cơ bản
         double difficultyMultiplier = 1 + (score / 400) * 0.4; // Tăng độ khó mỗi 500 điểm
         double spawnProbability = baseProbability * difficultyMultiplier;
 
@@ -651,6 +661,7 @@ public class SpaceShooter extends Application {
         bossExists = false;  // Đặt lại trạng thái boss
         gameRunning = false; // Đặt lại trạng thái trò chơi
         isShooting = false;  // Đặt lại trạng thái bắn
+        lastBossSpawnScore = 0; // Đặt lại mốc xuất hiện boss
     }
 
     private void showGameOverScreen(Stage primaryStage) {
