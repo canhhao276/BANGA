@@ -8,7 +8,7 @@ public class EnemyBullet extends GameObject {
     public static final int WIDTH = 4;
     public static final int HEIGHT = 20;
 
-    private static final double SPEED = 5;
+    private static final double SPEED = 7;
 
     private double dx = 0; // Hướng di chuyển theo trục X
     private double dy = SPEED; // Hướng di chuyển theo trục Y (mặc định là xuống dưới)

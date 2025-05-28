@@ -11,7 +11,7 @@ public class Bullet extends GameObject {
     public static final int HEIGHT = 25;
     private static Image bulletImage = new Image("Bullet.png"); // Đảm bảo đường dẫn đúng
 
-    private static final double SPEED = 6;
+    private static final double SPEED = 7;
 
     private boolean dead;
     private int damage = 17;
@@ -30,6 +30,8 @@ public class Bullet extends GameObject {
     @Override
     public void update() {
         y -= SPEED;
+
+        
 
         // Nếu vượt ra khỏi màn hình phía trên, đánh dấu là "dead"
         if (y + HEIGHT / 2 < 0) {

@@ -8,11 +8,9 @@ import javafx.scene.paint.Color;
 
 public class BossEnemy extends Enemy {
 
-    private static final double SHOOT_PROBABILITY = 0.005;
+    private static final double SHOOT_PROBABILITY = 0.01;
 
     private int health;
-    private int hitCount = 0; // Số lần boss bị trúng đạn
-    private static final int MAX_HITS = 3; // Số lần trúng đạn để boss chết
 
     private static final int WIDTH = 60;
     static final int HEIGHT = 60;
@@ -75,13 +73,14 @@ public class BossEnemy extends Enemy {
     }
 
     public void takeDamage(int damage) {
-        hitCount++; // Tăng số lần boss bị trúng đạn
-        System.out.println("Boss bị trúng đạn! Số lần trúng: " + hitCount); // Debug để kiểm tra số lần trúng đạn
+        if (isDead()) return;
+        health -= damage;
+        System.out.println("Boss bị trúng đạn! Máu còn: " + health);
 
-        if (hitCount >= MAX_HITS) {
-            setDead(true); // Boss chỉ chết khi bị trúng đạn đủ 3 lần
+        if (health <= 0) {
+            setDead(true);
             System.out.println("Boss đã chết!");
-        }
+    }
     }
 
     public void shoot(List<GameObject> newObjects) {

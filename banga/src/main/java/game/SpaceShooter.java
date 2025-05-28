@@ -30,6 +30,8 @@ public class SpaceShooter extends Application {
     public static final int HEIGHT = 800;
     public static int numLives = 3;
 
+    private boolean paused = false;
+
     private int score;
     private boolean bossExists;
     private boolean gameRunning;
@@ -283,26 +285,29 @@ public class SpaceShooter extends Application {
         gameRunning = true;
     }
 
-    private void initEventHandlers() {
-        scene.setOnKeyPressed(event -> {
-            switch (event.getCode()) {
-                case LEFT:
-                    player.setMoveLeft(true);
-                    break;
-                case RIGHT:
-                    player.setMoveRight(true);
-                    break;
-                case UP:
-                    player.setMoveForward(true);
-                    break;
-                case DOWN:
-                    player.setMoveBackward(true);
-                    break;
-                case SPACE:
-                    isShooting = true; // Bắt đầu bắn
-                    break;
-            }
-        });
+private void initEventHandlers() {
+    scene.setOnKeyPressed(event -> {
+        switch (event.getCode()) {
+            case LEFT:
+                player.setMoveLeft(true);
+                break;
+            case RIGHT:
+                player.setMoveRight(true);
+                break;
+            case UP:
+                player.setMoveForward(true);
+                break;
+            case DOWN:
+                player.setMoveBackward(true);
+                break;
+            case SPACE:
+                isShooting = true; // Bắt đầu bắn
+                break;
+            case P: // Thêm phím P để pause/unpause
+                paused = !paused;
+                break;
+        }
+    });
 
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
@@ -347,7 +352,7 @@ public class SpaceShooter extends Application {
         }
 
         // Cập nhật tất cả các đối tượng
-        for (GameObject obj : gameObjects) {
+        for (GameObject obj : new ArrayList<>(gameObjects)) {
             obj.update();
 
             // Nếu đối tượng là Player, giới hạn di chuyển trong khung hình
@@ -394,9 +399,9 @@ public class SpaceShooter extends Application {
 
         // Sinh thêm kẻ địch, boss, và power-up
         spawnEnemy();
-        if (score >= lastBossSpawnScore + 250 && !bossExists) {
+        if (score >= lastBossSpawnScore + 200 && !bossExists) {
             spawnBossEnemy();
-            lastBossSpawnScore += 250; // Cập nhật mốc điểm tiếp theo
+            lastBossSpawnScore += 200; // Cập nhật mốc điểm tiếp theo
         }
 
         // Cập nhật UI
@@ -463,8 +468,16 @@ public class SpaceShooter extends Application {
         for (int i = 0; i < gameObjects.size(); i++) {
             GameObject obj1 = gameObjects.get(i);
 
+                // Bỏ qua nếu obj1 là Bullet đã chết
+        if (obj1 instanceof Bullet && ((Bullet) obj1).isDead()) {
+            continue;  // Không xét va chạm nếu đạn đã chết
+        }
+
             for (int j = i + 1; j < gameObjects.size(); j++) {
                 GameObject obj2 = gameObjects.get(j);
+                    if (obj2 instanceof Bullet && ((Bullet) obj2).isDead()) {
+                    continue;  // Không xét va chạm nếu đạn đã chết
+                }
 
                 // Sử dụng bounding box để kiểm tra va chạm
                 if (obj1.getBounds().intersects(obj2.getBounds())) {
@@ -529,11 +542,10 @@ public class SpaceShooter extends Application {
                         Bullet bullet = (Bullet) (obj1 instanceof Bullet ? obj1 : obj2);
                         BossEnemy boss = (BossEnemy) (obj1 instanceof BossEnemy ? obj1 : obj2);
 
-                        // Gọi phương thức takeDamage của BossEnemy
-                        boss.takeDamage(bullet.getDamage());
-
-                        // Đánh dấu đạn là "dead" sau khi va chạm
-                        bullet.setDead(true);
+                    if (!boss.isDead()) {
+                            boss.takeDamage(bullet.getDamage());
+                            bullet.setDead(true);
+                        }
                     }
 
                     // Xử lý va chạm giữa Player và EnemyBullet
@@ -633,11 +645,23 @@ public class SpaceShooter extends Application {
         // Tạo game loop mới
         gameLoop = new AnimationTimer() {
             @Override
-            public void handle(long now) {
+        public void handle(long now) {
+            if (!paused) {
                 update();
-                render();
             }
-        };
+            render(); // Luôn render để hiển thị thông báo pause
+            if (paused) {
+                gc.setFill(Color.rgb(0, 0, 0, 0.5));
+                gc.fillRect(0, 0, WIDTH, HEIGHT);
+                gc.setFill(Color.YELLOW);
+                gc.setFont(Font.font("Arial", 48));
+                gc.fillText("PAUSED", WIDTH / 2 - 110, HEIGHT / 2);
+                gc.setFont(Font.font("Arial", 24));
+                gc.setFill(Color.WHITE);
+                gc.fillText("Press P to resume", WIDTH / 2 - 100, HEIGHT / 2 + 40);
+            }
+        }
+    };
         gameLoop.start();
     }
 
@@ -665,6 +689,12 @@ public class SpaceShooter extends Application {
     }
 
     private void showGameOverScreen(Stage primaryStage) {
+
+        // Dừng game loop nếu đang chạy
+        if (gameLoop != null) {
+            gameLoop.stop();
+        }
+        
         VBox rootGameOver = new VBox(20);
         rootGameOver.setAlignment(Pos.CENTER);
         rootGameOver.setStyle("-fx-background-color: black;");
